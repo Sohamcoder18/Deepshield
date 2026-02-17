@@ -1,6 +1,7 @@
 {
-  "buildCommand": "uv pip install --system --break-system-packages -r requirements.txt",
+  "buildCommand": "uv pip install --system --break-system-packages -r requirements.txt && mkdir -p public",
   "installCommand": "",
+  "outputDirectory": "public",
   "framework": null,
   "functions": {
     "api/app.py": {
