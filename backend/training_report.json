@@ -1,0 +1,19 @@
+{
+  "start_time": "2026-02-03T18:07:33.384632",
+  "models": {
+    "video": {
+      "status": "completed",
+      "timestamp": "2026-02-03T18:07:46.897753"
+    },
+    "image": {
+      "status": "completed",
+      "timestamp": "2026-02-03T18:07:57.037006"
+    },
+    "audio": {
+      "status": "completed",
+      "timestamp": "2026-02-03T18:08:06.168768"
+    }
+  },
+  "end_time": "2026-02-03T18:08:06.173368",
+  "models_verified": false
+}

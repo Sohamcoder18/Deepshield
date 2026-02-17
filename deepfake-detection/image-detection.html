@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Deepfake Detection - DeepShield</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">DeepShield</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="image-detection.html" class="active">Image Detection</a></li>
+                <li><a href="video-detection.html">Video Detection</a></li>
+                <li><a href="audio-detection.html">Audio Detection</a></li>
+                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
+                <li><a href="index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Detection Container -->
+    <div class="detection-container">
+        <div class="detection-header">
+            <h1>Image Deepfake Detection</h1>
+            <p>Upload an image to analyze it for signs of manipulation and deepfake artifacts</p>
+        </div>
+
+        <div class="detection-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📸</div>
+                    <h3>Drop your image here</h3>
+                    <p>or click to browse</p>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+                <div class="file-info" id="fileInfo" style="display: none;">
+                    <p id="fileName"></p>
+                    <button class="btn btn-secondary" onclick="clearFile()">Change File</button>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <div class="image-preview">
+                    <img id="previewImage" src="" alt="Preview">
+                </div>
+            </div>
+
+            <!-- Analysis Button -->
+            <div class="button-container">
+                <button class="btn btn-primary btn-large" id="analyzeBtn" onclick="analyzeImage()" style="display: none;">
+                    🔍 Analyze Image
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+                <div class="spinner"></div>
+                <p id="loadingText">Analyzing image with XceptionNet CNN...</p>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-percentage" id="progressPercentage">0%</p>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>Analysis Results</h2>
+
+                <div class="trust-score-container">
+                    <div class="trust-score-card">
+                        <h3>Overall Trust Score</h3>
+                        <div class="trust-meter">
+                            <div class="trust-bar" id="trustBar"></div>
+                        </div>
+                        <p class="trust-percentage" id="trustPercentage">0%</p>
+                    </div>
+                </div>
+
+                <!-- 🤖 AI-Powered Analysis Section (Dedicated) -->
+                <div id="aiReasonsContainer" class="ai-analysis-section" style="display: none;">
+                    <!-- Content will be injected here by JavaScript -->
+                </div>
+
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>📊 Detection Analysis</h3>
+                        <div class="result-item">
+                            <label>XceptionNet Confidence:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="xceptionConfidence"></div>
+                            </div>
+                            <span id="xceptionScore">0%</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Facial Artifact Detection:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="artifactConfidence"></div>
+                            </div>
+                            <span id="artifactScore">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>🎯 Detection Verdict</h3>
+                        <div class="verdict-box" id="verdictBox">
+                            <p id="verdictText"></p>
+                            <p class="verdict-confidence" id="verdictConfidence"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card full-width">
+                    <h3>📍 Grad-CAM Visualization</h3>
+                    <p class="info-text">Regions highlighted in red indicate areas that influenced the deepfake detection decision:</p>
+                    <div class="gradcam-container">
+                        <img id="gradcamImage" src="" alt="Grad-CAM Visualization" class="gradcam-image">
+                    </div>
+                </div>
+
+                <div class="result-card full-width">
+                    <h3>📋 Detailed Report</h3>
+                    <div class="report-details">
+                        <div class="report-item">
+                            <span class="report-label">File Analyzed:</span>
+                            <span id="reportFileName"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">File Size:</span>
+                            <span id="reportFileSize"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Analysis Time:</span>
+                            <span id="reportTime">0.00s</span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Models Used:</span>
+                            <span>MTCNN (Face Detection), XceptionNet (Deepfake Detection)</span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Recommendation:</span>
+                            <span id="reportRecommendation"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="btn btn-secondary" onclick="downloadReport()">📥 Download Report</button>
+                    <button class="btn btn-secondary" onclick="analyzeAnother()">🔄 Analyze Another</button>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-box">
+                    <p id="errorMessage"></p>
+                    <button class="btn btn-secondary" onclick="clearError()">Dismiss</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Section -->
+        <div class="info-section">
+            <h2>How Image Detection Works</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>1. Face Detection</h3>
+                    <p>MTCNN detects and extracts facial regions from the uploaded image.</p>
+                </div>
+                <div class="info-card">
+                    <h3>2. Feature Analysis</h3>
+                    <p>XceptionNet analyzes the facial region for artifacts and inconsistencies.</p>
+                </div>
+                <div class="info-card">
+                    <h3>3. Confidence Scoring</h3>
+                    <p>The model provides confidence scores indicating probability of manipulation.</p>
+                </div>
+                <div class="info-card">
+                    <h3>4. Explainability</h3>
+                    <p>Grad-CAM highlights regions that influenced the detection decision.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>DeepShield</h3>
+                    <p>Advanced deepfake detection system</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="image-detection.html">Image Detection</a></li>
+                        <li><a href="video-detection.html">Video Detection</a></li>
+                        <li><a href="audio-detection.html">Audio Detection</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Technologies</h4>
+                    <ul>
+                        <li>XceptionNet</li>
+                        <li>MTCNN</li>
+                        <li>MFCC</li>
+                        <li>Grad-CAM</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 DeepShield. All rights reserved. | Hackathon Project</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Authentication Check & Navigation Setup
+        function checkAuthentication() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function setupNavigation() {
+            const token = localStorage.getItem('authToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const profileLink = document.getElementById('profileLink');
+            
+            // Add logout button to navbar
+            const navLinks = document.querySelector('.nav-links');
+            
+            // Remove existing logout button if any
+            const existingLogout = document.getElementById('logoutBtn');
+            if (existingLogout) existingLogout.remove();
+            
+            if (token) {
+                profileLink.style.display = 'block';
+                // Display user email as profile name
+                profileLink.textContent = userEmail || 'Profile';
+                
+                // Create logout button
+                const logoutLi = document.createElement('li');
+                logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
+                navLinks.appendChild(logoutLi);
+                
+                // Logout functionality
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            setupNavigation();
+        });
+    </script>
+</body>
+</html>

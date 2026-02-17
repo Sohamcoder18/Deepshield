@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Deepfake Detection - DeepShield</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">DeepShield</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="image-detection.html">Image Detection</a></li>
+                <li><a href="video-detection.html">Video Detection</a></li>
+                <li><a href="audio-detection.html" class="active">Audio Detection</a></li>
+                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
+                <li><a href="index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Detection Container -->
+    <div class="detection-container">
+        <div class="detection-header">
+            <h1>Audio Deepfake Detection</h1>
+            <p>Upload an audio file to analyze it for signs of voice synthesis and speech manipulation</p>
+        </div>
+
+        <div class="detection-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🎵</div>
+                    <h3>Drop your audio file here</h3>
+                    <p>or click to browse</p>
+                    <input type="file" id="fileInput" accept="audio/*" hidden>
+                </div>
+                <div class="file-info" id="fileInfo" style="display: none;">
+                    <p id="fileName"></p>
+                    <button class="btn btn-secondary" onclick="clearFile()">Change File</button>
+                </div>
+            </div>
+
+            <!-- Audio Preview Section -->
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <div class="audio-player">
+                    <audio id="previewAudio" controls style="width: 100%; margin-bottom: 20px;">
+                        <source id="audioSource" src="" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+                <div class="audio-info">
+                    <p><strong>Duration:</strong> <span id="audioDuration">0:00</span></p>
+                    <p><strong>Sample Rate:</strong> <span id="sampleRate">N/A</span></p>
+                </div>
+            </div>
+
+            <!-- Waveform Visualization -->
+            <div class="waveform-container" id="waveformContainer" style="display: none;">
+                <h3>Audio Waveform</h3>
+                <canvas id="waveformCanvas" class="waveform-canvas"></canvas>
+            </div>
+
+            <!-- Analysis Button -->
+            <div class="button-container">
+                <button class="btn btn-primary btn-large" id="analyzeBtn" onclick="analyzeAudio()" style="display: none;">
+                    🔍 Analyze Audio
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+                <div class="spinner"></div>
+                <div class="progress-container">
+                    <p id="loadingText">Extracting MFCC features and analyzing speech...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-percentage" id="progressPercentage">0%</p>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>Audio Analysis Results</h2>
+
+                <div class="trust-score-container">
+                    <div class="trust-score-card">
+                        <h3>Overall Trust Score</h3>
+                        <div class="trust-meter">
+                            <div class="trust-bar" id="trustBar"></div>
+                        </div>
+                        <p class="trust-percentage" id="trustPercentage">0%</p>
+                    </div>
+                </div>
+
+                <!-- 🤖 AI-Powered Analysis Section (Dedicated) -->
+                <div id="aiReasonsContainer" class="ai-analysis-section" style="display: none;">
+                    <!-- Content will be injected here by JavaScript -->
+                </div>
+
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>📊 Speech Analysis</h3>
+                        <div class="result-item">
+                            <label>Speech Synthesis Probability:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="synthesisConfidence"></div>
+                            </div>
+                            <span id="synthesisScore">0%</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Voice Authenticity:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="authenticityConfidence"></div>
+                            </div>
+                            <span id="authenticityScore">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>📈 MFCC Features</h3>
+                        <p class="info-text">Mel-Frequency Cepstral Coefficients analysis:</p>
+                        <div class="result-item">
+                            <label>Spectral Consistency:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="spectralConfidence"></div>
+                            </div>
+                            <span id="spectralScore">0%</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Frequency Stability:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="frequencyConfidence"></div>
+                            </div>
+                            <span id="frequencyScore">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>🎯 Detection Verdict</h3>
+                        <div class="verdict-box" id="verdictBox">
+                            <p id="verdictText"></p>
+                            <p class="verdict-confidence" id="verdictConfidence"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MFCC Spectrogram -->
+                <div class="result-card full-width">
+                    <h3>🎵 MFCC Spectrogram</h3>
+                    <p class="info-text">Visual representation of audio features extracted from the speech signal:</p>
+                    <div class="spectrogram-container">
+                        <canvas id="spectrogramCanvas" class="spectrogram-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Frequency Analysis -->
+                <div class="result-card full-width">
+                    <h3>📊 Frequency Analysis</h3>
+                    <div class="frequency-analysis">
+                        <canvas id="frequencyChart" class="frequency-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="result-card full-width">
+                    <h3>📋 Detailed Report</h3>
+                    <div class="report-details">
+                        <div class="report-item">
+                            <span class="report-label">File Analyzed:</span>
+                            <span id="reportFileName"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">File Size:</span>
+                            <span id="reportFileSize"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Audio Duration:</span>
+                            <span id="reportDuration"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Sample Rate:</span>
+                            <span id="reportSampleRate"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Analysis Time:</span>
+                            <span id="reportTime">0.00s</span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Models Used:</span>
+                            <span>MFCC Feature Extraction, Audio CNN</span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Recommendation:</span>
+                            <span id="reportRecommendation"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="btn btn-secondary" onclick="downloadReport()">📥 Download Report</button>
+                    <button class="btn btn-secondary" onclick="analyzeAnother()">🔄 Analyze Another</button>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-box">
+                    <p id="errorMessage"></p>
+                    <button class="btn btn-secondary" onclick="clearError()">Dismiss</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Section -->
+        <div class="info-section">
+            <h2>How Audio Detection Works</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>1. Audio Processing</h3>
+                    <p>Audio file is loaded and processed for feature extraction.</p>
+                </div>
+                <div class="info-card">
+                    <h3>2. MFCC Extraction</h3>
+                    <p>Mel-Frequency Cepstral Coefficients capture audio characteristics.</p>
+                </div>
+                <div class="info-card">
+                    <h3>3. Feature Analysis</h3>
+                    <p>CNN model analyzes MFCC features for synthetic speech detection.</p>
+                </div>
+                <div class="info-card">
+                    <h3>4. Authenticity Scoring</h3>
+                    <p>Results are combined to generate audio authenticity verification.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>DeepShield</h3>
+                    <p>Advanced deepfake detection system</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="image-detection.html">Image Detection</a></li>
+                        <li><a href="video-detection.html">Video Detection</a></li>
+                        <li><a href="audio-detection.html">Audio Detection</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Technologies</h4>
+                    <ul>
+                        <li>XceptionNet</li>
+                        <li>MTCNN</li>
+                        <li>MFCC</li>
+                        <li>Grad-CAM</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 DeepShield. All rights reserved. | Hackathon Project</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Authentication Check & Navigation Setup
+        function checkAuthentication() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function setupNavigation() {
+            const token = localStorage.getItem('authToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const profileLink = document.getElementById('profileLink');
+            
+            // Add logout button to navbar
+            const navLinks = document.querySelector('.nav-links');
+            
+            // Remove existing logout button if any
+            const existingLogout = document.getElementById('logoutBtn');
+            if (existingLogout) existingLogout.remove();
+            
+            if (token) {
+                profileLink.style.display = 'block';
+                // Display user email as profile name
+                profileLink.textContent = userEmail || 'Profile';
+                
+                // Create logout button
+                const logoutLi = document.createElement('li');
+                logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
+                navLinks.appendChild(logoutLi);
+                
+                // Logout functionality
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            setupNavigation();
+        });
+    </script>
+</body>
+</html>

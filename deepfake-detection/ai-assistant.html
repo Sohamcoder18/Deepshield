@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - DeepShield</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">DeepShield</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="image-detection.html">Image Detection</a></li>
+                <li><a href="video-detection.html">Video Detection</a></li>
+                <li><a href="audio-detection.html">Audio Detection</a></li>
+                <li><a href="ai-assistant.html" class="active">AI Assistant</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
+                <li><a href="index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- AI Assistant Container -->
+    <div class="detection-container">
+        <div class="detection-header">
+            <h1>🤖 AI Assistant</h1>
+            <p>Ask me anything about deepfake detection and digital media authenticity</p>
+        </div>
+
+        <div class="detection-content">
+            <div class="ai-assistant-wrapper">
+                <!-- Chat Area -->
+                <div class="ai-chat-box">
+                    <div class="ai-chat-messages" id="chatContainer">
+                        <div class="ai-message assistant-msg">
+                            <div class="ai-msg-content">
+                                👋 Hello! I'm your DeepShield AI Assistant. I can help you understand deepfake detection results, answer questions about digital media authenticity, and provide insights about AI security. How can I assist you today?
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Suggestions -->
+                    <div class="ai-suggestions" id="suggestions">
+                        <div class="suggestion-btn" onclick="sendSuggestion('What is deepfake detection?')">What is deepfake detection?</div>
+                        <div class="suggestion-btn" onclick="sendSuggestion('How accurate is your detection?')">How accurate is your detection?</div>
+                        <div class="suggestion-btn" onclick="sendSuggestion('What indicators show a deepfake?')">What indicators show a deepfake?</div>
+                        <div class="suggestion-btn" onclick="sendSuggestion('How can I verify media authenticity?')">How can I verify media authenticity?</div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="ai-input-section">
+                        <div class="ai-input-wrapper">
+                            <textarea 
+                                id="messageInput" 
+                                placeholder="Ask me something..." 
+                                rows="2"
+                            ></textarea>
+                            <button id="sendBtn" class="btn btn-primary" onclick="sendMessage()">Send</button>
+                        </div>
+                        <div class="ai-action-buttons">
+                            <button class="btn btn-secondary" onclick="clearChat()">Clear Chat</button>
+                            <button class="btn btn-secondary" onclick="exportChat()">📥 Export</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>DeepShield</h4>
+                    <p>Advanced AI-powered deepfake detection system for images, videos, and audio.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="image-detection.html">Image Detection</a></li>
+                        <li><a href="video-detection.html">Video Detection</a></li>
+                        <li><a href="audio-detection.html">Audio Detection</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Technology</h4>
+                    <ul>
+                        <li>XceptionNet CNN</li>
+                        <li>Temporal Analysis</li>
+                        <li>MFCC Features</li>
+                        <li>Fusion Logic</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 DeepShield. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        /* AI Assistant Specific Styles */
+        .ai-assistant-wrapper {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .ai-chat-box {
+            background: var(--dark-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .ai-chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai-message {
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .ai-message.user-msg {
+            justify-content: flex-end;
+        }
+
+        .ai-msg-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+
+        .ai-message.user-msg .ai-msg-content {
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 12px 4px 12px 12px;
+        }
+
+        .ai-message.assistant-msg .ai-msg-content {
+            background: var(--dark-input);
+            color: var(--light-text);
+            border: 1px solid var(--border-color);
+            border-radius: 4px 12px 12px 12px;
+        }
+
+        /* Response formatting */
+        .ai-message.assistant-msg .ai-msg-content strong {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .ai-message.assistant-msg .ai-msg-content .list-item {
+            margin: 8px 0 8px 0;
+            padding-left: 8px;
+            border-left: 2px solid var(--secondary-color);
+        }
+
+        .ai-message.assistant-msg .ai-msg-content .bullet-item {
+            margin: 6px 0 6px 16px;
+        }
+
+        .ai-message.assistant-msg .ai-msg-content .text-line {
+            margin: 4px 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--dark-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.5;
+            }
+            30% {
+                opacity: 1;
+            }
+        }
+
+        .ai-suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            padding: 0 20px 20px;
+            margin-top: auto;
+        }
+
+        .suggestion-btn {
+            padding: 12px;
+            background: var(--dark-input);
+            border: 1px solid var(--border-color);
+            color: var(--light-text);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .suggestion-btn:hover {
+            background: var(--gradient-primary);
+            border-color: transparent;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .ai-input-section {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--dark-card);
+        }
+
+        .ai-input-wrapper {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 12px;
+            background: var(--dark-input);
+            border: 1px solid var(--border-color);
+            color: var(--light-text);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            max-height: 100px;
+            font-family: inherit;
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        #sendBtn {
+            padding: 12px 24px;
+            white-space: nowrap;
+        }
+
+        .ai-action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ai-action-buttons .btn {
+            flex: 1;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        /* Scrollbar styling */
+        .ai-chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .ai-chat-messages::-webkit-scrollbar-track {
+            background: var(--dark-input);
+            border-radius: 10px;
+        }
+
+        .ai-chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .ai-chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            background: rgba(255, 51, 51, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .ai-chat-box {
+                height: 500px;
+            }
+
+            .ai-msg-content {
+                max-width: 85%;
+            }
+
+            .ai-suggestions {
+                grid-template-columns: 1fr;
+            }
+
+            .ai-input-wrapper {
+                flex-direction: column;
+            }
+
+            #sendBtn {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const suggestionsDiv = document.getElementById('suggestions');
+
+        let conversationHistory = [];
+        let currentAnalysisId = null;
+        let isWaitingForResponse = false;
+
+        // Get analysis ID from URL parameters if available
+        const urlParams = new URLSearchParams(window.location.search);
+        currentAnalysisId = urlParams.get('analysis_id') || null;
+
+        // Allow Enter key to send message (Shift+Enter for new line)
+        messageInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ${isUser ? 'user-msg' : 'assistant-msg'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'ai-msg-content';
+            
+            if (isUser) {
+                contentDiv.textContent = content;
+            } else {
+                // Format assistant responses with proper text wrapping and line breaks
+                contentDiv.innerHTML = formatResponse(content);
+            }
+            
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            if (!isUser) {
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: content
+                });
+            } else {
+                conversationHistory.push({
+                    role: 'user',
+                    content: content
+                });
+            }
+        }
+
+        function formatResponse(text) {
+            // Preserve existing line breaks and add proper formatting
+            return text
+                .split('\n')
+                .map(line => {
+                    line = line.trim();
+                    if (!line) return '<br>';
+                    
+                    // Format numbered lists
+                    if (/^\d+\.\s/.test(line)) {
+                        return `<div class="list-item"><strong>${line}</strong></div>`;
+                    }
+                    
+                    // Format bullet points
+                    if (/^[\*\-]\s/.test(line)) {
+                        return `<div class="bullet-item">${line}</div>`;
+                    }
+                    
+                    // Format bold text markers
+                    line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    line = line.replace(/\*\*(.*?):/g, '<strong>$1:</strong>');
+                    
+                    return `<div class="text-line">${line}</div>`;
+                })
+                .join('')
+                .replace(/<br><br>+/g, '<br>')
+                .replace(/<br>$/, '');
+        }
+
+        function showTypingIndicator() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'ai-message assistant-msg';
+            messageDiv.id = 'typingIndicator';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'typing-indicator';
+            contentDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message || isWaitingForResponse) {
+                return;
+            }
+
+            // Hide suggestions on first message
+            if (conversationHistory.length === 0) {
+                suggestionsDiv.style.display = 'none';
+            }
+
+            addMessage(message, true);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            sendBtn.disabled = true;
+            isWaitingForResponse = true;
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('http://localhost:5000/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        history: conversationHistory,
+                        analysis_id: currentAnalysisId
+                    })
+                });
+
+                removeTypingIndicator();
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to get response');
+                }
+
+                const data = await response.json();
+                addMessage(data.response, false);
+
+            } catch (error) {
+                removeTypingIndicator();
+                console.error('Error:', error);
+                const errorMsg = `⚠️ Error: ${error.message}. Please check if the backend server is running.`;
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'ai-message assistant-msg';
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'ai-msg-content error-message';
+                contentDiv.textContent = errorMsg;
+                messageDiv.appendChild(contentDiv);
+                chatContainer.appendChild(messageDiv);
+            } finally {
+                sendBtn.disabled = false;
+                isWaitingForResponse = false;
+                messageInput.focus();
+            }
+        }
+
+        function sendSuggestion(suggestion) {
+            messageInput.value = suggestion;
+            messageInput.focus();
+            sendMessage();
+        }
+
+        function clearChat() {
+            if (confirm('Are you sure you want to clear the chat history?')) {
+                conversationHistory = [];
+                chatContainer.innerHTML = `
+                    <div class="ai-message assistant-msg">
+                        <div class="ai-msg-content">
+                            👋 Hello! I'm your DeepShield AI Assistant. How can I help you today?
+                        </div>
+                    </div>
+                `;
+                suggestionsDiv.style.display = 'grid';
+                messageInput.focus();
+            }
+        }
+
+        async function exportChat() {
+            if (conversationHistory.length === 0) {
+                alert('No chat to export!');
+                return;
+            }
+
+            let exportText = 'DeepShield Chat Export\n';
+            exportText += `Generated: ${new Date().toLocaleString()}\n`;
+            exportText += '='.repeat(60) + '\n\n';
+
+            for (const msg of conversationHistory) {
+                exportText += `[${msg.role.toUpperCase()}]\n${msg.content}\n\n`;
+                exportText += '-'.repeat(60) + '\n\n';
+            }
+
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `deepshield_chat_${new Date().getTime()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // Load chat history if available
+        async function loadChatHistory() {
+            if (currentAnalysisId) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/chat/history/${currentAnalysisId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.history && data.history.length > 0) {
+                            chatContainer.innerHTML = '';
+                            for (const chat of data.history) {
+                                addMessage(chat.user_message, true);
+                                addMessage(chat.assistant_response, false);
+                            }
+                            suggestionsDiv.style.display = 'none';
+                        }
+                    }
+                } catch (error) {
+                    console.log('Could not load chat history:', error);
+                }
+            }
+        }
+
+        // Load chat history on page load
+        window.addEventListener('load', loadChatHistory);
+
+        // Authentication Check & Navigation Setup
+        function checkAuthentication() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function setupNavigation() {
+            const token = localStorage.getItem('authToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const profileLink = document.getElementById('profileLink');
+            
+            // Add logout button to navbar
+            const navLinks = document.querySelector('.nav-links');
+            
+            // Remove existing logout button if any
+            const existingLogout = document.getElementById('logoutBtn');
+            if (existingLogout) existingLogout.remove();
+            
+            if (token) {
+                profileLink.style.display = 'block';
+                // Display user email as profile name
+                profileLink.textContent = userEmail || 'Profile';
+                
+                // Create logout button
+                const logoutLi = document.createElement('li');
+                logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
+                navLinks.appendChild(logoutLi);
+                
+                // Logout functionality
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            setupNavigation();
+        });
+    </script>
+</body>
+</html>

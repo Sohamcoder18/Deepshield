@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - DeepShield</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
+    <style>
+        .profile-container {
+            min-height: 100vh;
+            background: var(--dark-bg);
+            padding: 40px 20px;
+        }
+
+        .profile-header {
+            max-width: 900px;
+            margin: 0 auto 40px;
+            text-align: center;
+        }
+
+        .profile-header h1 {
+            font-size: 32px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .profile-card {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--dark-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .profile-section h2 {
+            font-size: 18px;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .profile-item {
+            background: var(--dark-input);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .profile-item label {
+            display: block;
+            color: var(--light-text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .profile-item p {
+            color: var(--light-text);
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .profile-item p.empty {
+            color: var(--light-text-secondary);
+            font-style: italic;
+        }
+
+        .profile-bio {
+            background: var(--dark-input);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        .profile-bio label {
+            display: block;
+            color: var(--light-text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .profile-bio p {
+            color: var(--light-text);
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .profile-bio p.empty {
+            color: var(--light-text-secondary);
+            font-style: italic;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 102, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--dark-input);
+            color: var(--light-text);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-danger {
+            background: rgba(255, 51, 51, 0.2);
+            color: #ff3333;
+            border: 1px solid #ff3333;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 51, 51, 0.3);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-top-color: var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(255, 51, 51, 0.1);
+            border-left: 3px solid #ff3333;
+            color: #ff3333;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(0, 208, 132, 0.1);
+            border-left: 3px solid var(--success-color);
+            color: var(--success-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.1) 0%, rgba(0, 212, 255, 0.1) 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .edit-input {
+            background: var(--dark-bg);
+            color: var(--light-text);
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+            width: 100%;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .edit-input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b366 0%, #00ff88 100%) !important;
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3) !important;
+        }        .stat-card .stat-label {
+            color: var(--light-text-secondary);
+            font-size: 12px;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 768px) {
+            .profile-card {
+                padding: 20px;
+            }
+
+            .profile-header h1 {
+                font-size: 24px;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">DeepShield</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="image-detection.html">Image Detection</a></li>
+                <li><a href="video-detection.html">Video Detection</a></li>
+                <li><a href="audio-detection.html">Audio Detection</a></li>
+                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name active" style="display: none;"></a></li>
+                <li><a href="index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Profile Container -->
+    <div class="profile-container">
+        <div class="profile-header">
+            <h1>Your Profile</h1>
+            <p style="color: var(--light-text-secondary); margin-top: 10px;">Manage your account information</p>
+        </div>
+
+        <div class="profile-card">
+            <!-- Error/Success Messages -->
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <!-- Loading State -->
+            <div style="text-align: center; padding: 40px;" id="loadingState">
+                <div class="loading-spinner" style="margin: 0 auto; margin-bottom: 15px;"></div>
+                <p style="color: var(--light-text-secondary);">Loading your profile...</p>
+            </div>
+
+            <!-- Profile Content (Hidden initially) -->
+            <div id="profileContent" style="display: none;">
+                <!-- Personal Information -->
+                <div class="profile-section">
+                    <h2>📋 Personal Information</h2>
+                    <div class="profile-grid">
+                        <div class="profile-item">
+                            <label>Full Name</label>
+                            <p id="fullName" data-field="full_name">-</p>
+                        </div>
+                        <div class="profile-item">
+                            <label>Email</label>
+                            <p id="email" data-field="email">-</p>
+                        </div>
+                        <div class="profile-item">
+                            <label>Phone Number</label>
+                            <p id="phoneNumber" data-field="phone_number">-</p>
+                        </div>
+                        <div class="profile-item">
+                            <label>Date of Birth</label>
+                            <p id="dateOfBirth" data-field="date_of_birth">-</p>
+                        </div>
+                        <div class="profile-item">
+                            <label>Country</label>
+                            <p id="country" data-field="country">-</p>
+                        </div>
+                        <div class="profile-item">
+                            <label>Occupation</label>
+                            <p id="occupation" data-field="occupation">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Statistics -->
+                <div class="profile-section">
+                    <h2>📊 Account Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalAnalyses">0</div>
+                            <div class="stat-label">Total Analyses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="memberSince">-</div>
+                            <div class="stat-label">Member Since</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="lastActive">-</div>
+                            <div class="stat-label">Last Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="profile-actions">
+                    <button class="btn btn-primary" onclick="editProfile()">✏️ Edit Profile</button>
+                    <button class="btn btn-secondary" onclick="goHome()">🏠 Go to Home</button>
+                    <button class="btn btn-danger" onclick="logoutUser()">🚪 Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>DeepShield</h3>
+                    <p>Advanced deepfake detection system</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="profile.html">Profile</a></li>
+                        <li><a href="ai-assistant.html">AI Assistant</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 DeepShield. All rights reserved. | Hackathon Project</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            loadProfile();
+        });
+
+        async function loadProfile() {
+            try {
+                const token = localStorage.getItem('authToken');
+                console.log('Loading profile with token:', token);
+                
+                const response = await fetch('http://localhost:5000/api/auth/user', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('authToken');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    const errorData = await response.text();
+                    console.error('Error response:', errorData);
+                    throw new Error(`Failed to load profile: ${response.statusText}`);
+                }
+
+                const user = await response.json();
+                console.log('User data received:', user);
+                displayProfile(user);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to load profile: ' + error.message);
+                // Try to display whatever data we have
+                displayFallbackProfile();
+            } finally {
+                const loadingState = document.getElementById('loadingState');
+                const profileContent = document.getElementById('profileContent');
+                if (loadingState) loadingState.style.display = 'none';
+                if (profileContent) profileContent.style.display = 'block';
+            }
+        }
+        
+        function displayFallbackProfile() {
+            const userEmail = localStorage.getItem('userEmail') || 'Not provided';
+            document.getElementById('email').textContent = userEmail;
+            document.getElementById('fullName').textContent = 'User';
+            document.getElementById('phoneNumber').textContent = '-';
+            document.getElementById('dateOfBirth').textContent = '-';
+            document.getElementById('country').textContent = '-';
+            document.getElementById('occupation').textContent = '-';
+            document.getElementById('totalAnalyses').textContent = '0';
+            document.getElementById('memberSince').textContent = '-';
+            document.getElementById('lastActive').textContent = '-';
+        }
+
+        function displayProfile(user) {
+            // Personal Information
+            document.getElementById('fullName').textContent = user.full_name || '-';
+            document.getElementById('email').textContent = user.email || '-';
+            document.getElementById('phoneNumber').textContent = user.phone_number || '-';
+            document.getElementById('dateOfBirth').textContent = formatDate(user.date_of_birth) || '-';
+            document.getElementById('country').textContent = user.country || '-';
+            document.getElementById('occupation').textContent = user.occupation || '-';
+
+            // Statistics
+            document.getElementById('totalAnalyses').textContent = user.total_analyses || 0;
+            document.getElementById('memberSince').textContent = formatDate(user.created_at) || '-';
+            document.getElementById('lastActive').textContent = formatDate(user.last_login) || '-';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function editProfile() {
+            // Toggle edit mode
+            const fields = document.querySelectorAll('[data-field]');
+            const editBtn = event.target;
+            
+            const isEditing = editBtn.textContent.includes('✏️');
+            
+            if (isEditing) {
+                // Switch to edit mode
+                fields.forEach(field => {
+                    const fieldName = field.getAttribute('data-field');
+                    const currentValue = field.textContent;
+                    field.innerHTML = `<input type="text" value="${currentValue}" class="edit-input">`;
+                });
+                editBtn.textContent = '💾 Save Profile';
+                editBtn.classList.add('btn-success');
+                editBtn.classList.remove('btn-primary');
+            } else {
+                // Save mode - collect all data
+                const updatedData = {};
+                fields.forEach(field => {
+                    const fieldName = field.getAttribute('data-field');
+                    const input = field.querySelector('.edit-input');
+                    if (input) {
+                        updatedData[fieldName] = input.value || '';
+                    }
+                });
+                
+                // Send update to backend
+                saveProfileChanges(updatedData, editBtn);
+            }
+        }
+        
+        async function saveProfileChanges(data, button) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('http://localhost:5000/api/auth/update-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update profile');
+                }
+                
+                const result = await response.json();
+                showSuccess('Profile updated successfully!');
+                
+                // Reload profile
+                loadProfile();
+                
+                // Reset button
+                button.textContent = '✏️ Edit Profile';
+                button.classList.remove('btn-success');
+                button.classList.add('btn-primary');
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to update profile: ' + error.message);
+            }
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        function logoutUser() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userEmail');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Authentication Check & Navigation Setup
+        function checkAuthentication() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function setupNavigation() {
+            const token = localStorage.getItem('authToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const profileLink = document.getElementById('profileLink');
+            const navLinks = document.querySelector('.nav-links');
+            
+            // Remove existing logout button if any
+            const existingLogout = document.getElementById('logoutBtn');
+            if (existingLogout) existingLogout.remove();
+            
+            if (token) {
+                profileLink.style.display = 'block';
+                // Display user email as profile name
+                profileLink.textContent = userEmail || 'Profile';
+                
+                // Create logout button
+                const logoutLi = document.createElement('li');
+                logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
+                navLinks.appendChild(logoutLi);
+                
+                // Logout functionality
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            setupNavigation();
+        });
+    </script>
+</body>
+</html>

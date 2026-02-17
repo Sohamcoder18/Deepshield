@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Deepfake Detection - DeepShield</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">DeepShield</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="image-detection.html">Image Detection</a></li>
+                <li><a href="video-detection.html" class="active">Video Detection</a></li>
+                <li><a href="audio-detection.html">Audio Detection</a></li>
+                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
+                <li><a href="index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Detection Container -->
+    <div class="detection-container">
+        <div class="detection-header">
+            <h1>Video Deepfake Detection</h1>
+            <p>Upload a video to analyze it frame-by-frame for signs of manipulation and deepfake artifacts</p>
+        </div>
+
+        <div class="detection-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🎥</div>
+                    <h3>Drop your video here</h3>
+                    <p>or click to browse</p>
+                    <input type="file" id="fileInput" accept="video/*" hidden>
+                </div>
+                <div class="file-info" id="fileInfo" style="display: none;">
+                    <p id="fileName"></p>
+                    <button class="btn btn-secondary" onclick="clearFile()">Change File</button>
+                </div>
+            </div>
+
+            <!-- Video Preview Section -->
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <div class="video-preview">
+                    <video id="previewVideo" controls width="100%">
+                        <source id="videoSource" src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="video-info">
+                    <p><strong>Duration:</strong> <span id="videoDuration">0:00</span></p>
+                    <p><strong>Resolution:</strong> <span id="videoResolution">N/A</span></p>
+                </div>
+            </div>
+
+            <!-- Frame Selection -->
+            <div class="frame-selection" id="frameSelection" style="display: none;">
+                <h3>Select Sample Frames for Analysis</h3>
+                <p class="info-text">Sample frames from the video for faster analysis</p>
+                <div class="frame-options">
+                    <label class="radio-option">
+                        <input type="radio" name="frameSample" value="5" checked>
+                        <span>5 Sample Frames (Fast)</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="frameSample" value="15">
+                        <span>15 Sample Frames (Balanced)</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="frameSample" value="30">
+                        <span>30 Sample Frames (Thorough)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Analysis Button -->
+            <div class="button-container">
+                <button class="btn btn-primary btn-large" id="analyzeBtn" onclick="analyzeVideo()" style="display: none;">
+                    🔍 Analyze Video
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+                <div class="spinner"></div>
+                <div class="progress-container">
+                    <p id="loadingText">Extracting and analyzing frames...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-percentage" id="progressPercentage">0%</p>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>Video Analysis Results</h2>
+
+                <div class="trust-score-container">
+                    <div class="trust-score-card">
+                        <h3>Overall Trust Score</h3>
+                        <div class="trust-meter">
+                            <div class="trust-bar" id="trustBar"></div>
+                        </div>
+                        <p class="trust-percentage" id="trustPercentage">0%</p>
+                    </div>
+                </div>
+
+                <!-- 🤖 AI-Powered Analysis Section (Dedicated) -->
+                <div id="aiReasonsContainer" class="ai-analysis-section" style="display: none;">
+                    <!-- Content will be injected here by JavaScript -->
+                </div>
+
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>📊 Frame Analysis</h3>
+                        <div class="result-item">
+                            <label>Frames Analyzed:</label>
+                            <span id="framesAnalyzed">0</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Average Fake Probability:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="avgConfidence"></div>
+                            </div>
+                            <span id="avgScore">0%</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Suspicious Frames:</label>
+                            <span id="suspiciousFrames">0</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>🎯 Temporal Consistency</h3>
+                        <div class="result-item">
+                            <label>Consistency Score:</label>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="consistencyScore"></div>
+                            </div>
+                            <span id="consistencyValue">0%</span>
+                        </div>
+                        <p class="info-text" id="consistencyInfo"></p>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>📋 Detection Verdict</h3>
+                        <div class="verdict-box" id="verdictBox">
+                            <p id="verdictText"></p>
+                            <p class="verdict-confidence" id="verdictConfidence"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frame Analysis Timeline -->
+                <div class="result-card full-width">
+                    <h3>📈 Frame Analysis Timeline</h3>
+                    <div class="timeline-container">
+                        <canvas id="timelineChart" class="timeline-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Suspicious Frames Gallery -->
+                <div class="result-card full-width">
+                    <h3>⚠️ Suspicious Frames Gallery</h3>
+                    <div class="frames-gallery" id="framesGallery">
+                        <!-- Frames will be added here -->
+                    </div>
+                </div>
+
+                <div class="result-card full-width">
+                    <h3>📋 Detailed Report</h3>
+                    <div class="report-details">
+                        <div class="report-item">
+                            <span class="report-label">File Analyzed:</span>
+                            <span id="reportFileName"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">File Size:</span>
+                            <span id="reportFileSize"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Video Duration:</span>
+                            <span id="reportDuration"></span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Analysis Time:</span>
+                            <span id="reportTime">0.00s</span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Models Used:</span>
+                            <span>MTCNN (Face Detection), XceptionNet (Deepfake Detection), Temporal Analysis</span>
+                        </div>
+                        <div class="report-item">
+                            <span class="report-label">Recommendation:</span>
+                            <span id="reportRecommendation"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="btn btn-secondary" onclick="downloadReport()">📥 Download Report</button>
+                    <button class="btn btn-secondary" onclick="analyzeAnother()">🔄 Analyze Another</button>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-box">
+                    <p id="errorMessage"></p>
+                    <button class="btn btn-secondary" onclick="clearError()">Dismiss</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Section -->
+        <div class="info-section">
+            <h2>How Video Detection Works</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>1. Frame Extraction</h3>
+                    <p>Video is split into individual frames at regular intervals for analysis.</p>
+                </div>
+                <div class="info-card">
+                    <h3>2. Face Detection</h3>
+                    <p>MTCNN detects facial regions in each frame with high precision.</p>
+                </div>
+                <div class="info-card">
+                    <h3>3. Deepfake Detection</h3>
+                    <p>XceptionNet analyzes each frame for artifacts and inconsistencies.</p>
+                </div>
+                <div class="info-card">
+                    <h3>4. Temporal Analysis</h3>
+                    <p>Results are combined across frames to detect temporal inconsistencies.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>DeepShield</h3>
+                    <p>Advanced deepfake detection system</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="image-detection.html">Image Detection</a></li>
+                        <li><a href="video-detection.html">Video Detection</a></li>
+                        <li><a href="audio-detection.html">Audio Detection</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Technologies</h4>
+                    <ul>
+                        <li>XceptionNet</li>
+                        <li>MTCNN</li>
+                        <li>MFCC</li>
+                        <li>Grad-CAM</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 DeepShield. All rights reserved. | Hackathon Project</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Show profile link if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('authToken');
+            const profileLink = document.getElementById('profileLink');
+            if (token && profileLink) {
+                profileLink.style.display = 'block';
+            }
+        });
+    </script>
+    <script>
+        // Authentication Check & Navigation Setup
+        function checkAuthentication() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function setupNavigation() {
+            const token = localStorage.getItem('authToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const profileLink = document.getElementById('profileLink');
+            
+            // Add logout button to navbar
+            const navLinks = document.querySelector('.nav-links');
+            
+            // Remove existing logout button if any
+            const existingLogout = document.getElementById('logoutBtn');
+            if (existingLogout) existingLogout.remove();
+            
+            if (token) {
+                profileLink.style.display = 'block';
+                // Display user email as profile name
+                profileLink.textContent = userEmail || 'Profile';
+                
+                // Create logout button
+                const logoutLi = document.createElement('li');
+                logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
+                navLinks.appendChild(logoutLi);
+                
+                // Logout functionality
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            setupNavigation();
+        });
+    </script>
+</body>
+</html>

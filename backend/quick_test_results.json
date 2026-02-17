@@ -1,0 +1,48 @@
+{
+  "images": [
+    {
+      "file": "test_fake_image.png",
+      "prediction": "FAKE",
+      "confidence": 0.508
+    },
+    {
+      "file": "test_pattern_image.png",
+      "prediction": "REAL",
+      "confidence": 0.421
+    },
+    {
+      "file": "test_real_image.png",
+      "prediction": "REAL",
+      "confidence": 0.432
+    }
+  ],
+  "videos": [
+    {
+      "file": "test_fake_video.mp4",
+      "prediction": "FAKE",
+      "confidence": 0.52
+    },
+    {
+      "file": "test_real_video.mp4",
+      "prediction": "FAKE",
+      "confidence": 0.67
+    }
+  ],
+  "audio": [
+    {
+      "file": "modulated.wav",
+      "prediction": "FAKE",
+      "confidence": 0.9
+    },
+    {
+      "file": "sine_wave.wav",
+      "prediction": "REAL",
+      "confidence": 0.4
+    },
+    {
+      "file": "white_noise.wav",
+      "prediction": "FAKE",
+      "confidence": 0.9
+    }
+  ]
+}

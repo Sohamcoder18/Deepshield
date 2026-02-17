@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepShield - Deepfake Detection System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">DeepShield</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="image-detection.html">Image Detection</a></li>
+                <li><a href="video-detection.html">Video Detection</a></li>
+                <li><a href="audio-detection.html">Audio Detection</a></li>
+                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Detect Deepfakes with AI</h1>
+            <p class="hero-subtitle">Advanced AI-powered detection system to identify manipulated images, videos, and audio content</p>
+            <div class="hero-buttons">
+                <a href="image-detection.html" class="btn btn-primary">Analyze Image</a>
+                <a href="video-detection.html" class="btn btn-primary">Analyze Video</a>
+                <a href="audio-detection.html" class="btn btn-primary">Analyze Audio</a>
+            </div>
+        </div>
+        <div class="hero-background">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Our Detection Technology</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📸</div>
+                    <h3>Image Analysis</h3>
+                    <p>Advanced facial artifact detection using XceptionNet CNN to identify manipulated images with high accuracy.</p>
+                    <ul class="feature-list">
+                        <li>XceptionNet model</li>
+                        <li>Facial region detection</li>
+                        <li>Real-time processing</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎥</div>
+                    <h3>Video Analysis</h3>
+                    <p>Frame-by-frame deepfake detection with temporal consistency checking for comprehensive video authentication.</p>
+                    <ul class="feature-list">
+                        <li>Frame extraction</li>
+                        <li>Temporal analysis</li>
+                        <li>Consistency scoring</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎵</div>
+                    <h3>Audio Analysis</h3>
+                    <p>Speech synthesis detection using MFCC feature extraction and CNN classification for audio authenticity verification.</p>
+                    <ul class="feature-list">
+                        <li>MFCC extraction</li>
+                        <li>Speech analysis</li>
+                        <li>Synthetic detection</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔀</div>
+                    <h3>Fusion Logic</h3>
+                    <p>Intelligent weighted fusion of multiple detection results for a comprehensive trust score assessment.</p>
+                    <ul class="feature-list">
+                        <li>Multi-modal analysis</li>
+                        <li>Weighted scoring</li>
+                        <li>Final verdict</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Explainable AI</h3>
+                    <p>Grad-CAM visualization highlights the regions that influenced the model's decision for transparency.</p>
+                    <ul class="feature-list">
+                        <li>Visual explanations</li>
+                        <li>Attention maps</li>
+                        <li>Decision insights</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Real-time Results</h3>
+                    <p>Instant analysis and detailed reports with confidence scores and visual indicators for quick decision making.</p>
+                    <ul class="feature-list">
+                        <li>Instant processing</li>
+                        <li>Confidence scores</li>
+                        <li>Detailed reports</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Models Section -->
+    <section class="models">
+        <div class="container">
+            <h2 class="section-title">ML Models & Techniques</h2>
+            <div class="models-grid">
+                <div class="model-card">
+                    <h3>XceptionNet</h3>
+                    <p class="model-type">CNN Architecture</p>
+                    <p>Deep learning CNN based on depthwise separable convolutions for capturing subtle facial artifacts.</p>
+                </div>
+                <div class="model-card">
+                    <h3>MTCNN</h3>
+                    <p class="model-type">Face Detection</p>
+                    <p>Multi-task cascaded CNN for detecting and cropping facial regions with landmark precision.</p>
+                </div>
+                <div class="model-card">
+                    <h3>MFCC</h3>
+                    <p class="model-type">Audio Features</p>
+                    <p>Mel-Frequency Cepstral Coefficients for extracting meaningful features from audio signals.</p>
+                </div>
+                <div class="model-card">
+                    <h3>Audio CNN</h3>
+                    <p class="model-type">Classification</p>
+                    <p>Convolutional Neural Network trained to classify audio as real or synthetically generated.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="workflow">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <h3>Upload Content</h3>
+                    <p>Select and upload your image, video, or audio file for analysis</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <h3>Processing</h3>
+                    <p>AI models analyze the content for signs of manipulation</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <h3>Analysis</h3>
+                    <p>Multi-modal fusion combines all detection results</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <h3>Results</h3>
+                    <p>Get detailed report with trust score and visual explanations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2 class="section-title">About DeepShield</h2>
+            <div class="about-content">
+                <p>DeepShield is a state-of-the-art deepfake detection system designed to help identify manipulated multimedia content. With advances in AI and deep learning, creating convincing deepfakes has become easier, making detection tools essential for content verification and misinformation prevention.</p>
+                <p>Our system combines multiple detection algorithms and machine learning models to provide comprehensive analysis across images, videos, and audio content. We leverage cutting-edge techniques like XceptionNet, MTCNN, and MFCC feature extraction to ensure accurate and reliable results.</p>
+                <p>DeepShield is committed to transparency and explainability, providing visual insights into why content was flagged as potentially fake, helping users understand the detection process.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>DeepShield</h3>
+                    <p>Advanced deepfake detection system</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="image-detection.html">Image Detection</a></li>
+                        <li><a href="video-detection.html">Video Detection</a></li>
+                        <li><a href="audio-detection.html">Audio Detection</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Technologies</h4>
+                    <ul>
+                        <li>XceptionNet</li>
+                        <li>MTCNN</li>
+                        <li>MFCC</li>
+                        <li>Grad-CAM</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 DeepShield. All rights reserved. | Hackathon Project</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Authentication Check & Navigation Setup
+        function checkAuthentication() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function setupNavigation() {
+            const token = localStorage.getItem('authToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const profileLink = document.getElementById('profileLink');
+            
+            // Add logout button to navbar
+            const navLinks = document.querySelector('.nav-links');
+            
+            // Remove existing logout button if any
+            const existingLogout = document.getElementById('logoutBtn');
+            if (existingLogout) existingLogout.remove();
+            
+            if (token) {
+                profileLink.style.display = 'block';
+                // Display user email as profile name
+                profileLink.textContent = userEmail || 'Profile';
+                
+                // Create logout button
+                const logoutLi = document.createElement('li');
+                logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
+                navLinks.appendChild(logoutLi);
+                
+                // Logout functionality
+                document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userEmail');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            setupNavigation();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-02-15T21:23:54.838282",
+  "overall_accuracy": 100.0,
+  "summary": {
+    "image": {
+      "correct": 3,
+      "total": 3,
+      "accuracy": 100.0
+    },
+    "video": {
+      "correct": 2,
+      "total": 2,
+      "accuracy": 100.0
+    },
+    "audio": {
+      "correct": 3,
+      "total": 3,
+      "accuracy": 100.0
+    }
+  },
+  "ensemble": {
+    "models": [
+      "siglip",
+      "deepfake_v2",
+      "audio_classifier"
+    ],
+    "weights": {
+      "siglip": 0.3,
+      "deepfake_v2": 0.3,
+      "video_classifier": 0.25,
+      "audio_classifier": 0.15
+    },
+    "version": "multi-model-ensemble-v1"
+  },
+  "detailed_results": {
+    "images": {
+      "real_gradient": {
+        "actual": "real",
+        "predicted": "real",
+        "fake_confidence": 0.432,
+        "correct": true
+      },
+      "fake_noise": {
+        "actual": "fake",
+        "predicted": "fake",
+        "fake_confidence": 0.545,
+        "correct": true
+      },
+      "pattern": {
+        "actual": "real",
+        "predicted": "real",
+        "fake_confidence": 0.421,
+        "correct": true
+      }
+    },
+    "videos": {
+      "real_video": {
+        "actual": "real",
+        "predicted": "real",
+        "fake_confidence": 0.463,
+        "correct": true,
+        "models_used": 3
+      },
+      "fake_video": {
+        "actual": "fake",
+        "predicted": "fake",
+        "fake_confidence": 0.535,
+        "correct": true,
+        "models_used": 3
+      }
+    },
+    "audio": {
+      "sine_wave": {
+        "actual": "real",
+        "predicted": "real",
+        "fake_confidence": 0.0,
+        "correct": true
+      },
+      "white_noise": {
+        "actual": "fake",
+        "predicted": "fake",
+        "fake_confidence": 0.85,
+        "correct": true
+      },
+      "modulated": {
+        "actual": "real",
+        "predicted": "real",
+        "fake_confidence": 0.0,
+        "correct": true
+      }
+    }
+  }
+}
