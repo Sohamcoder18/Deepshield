@@ -1,0 +1,10 @@
+{
+  "buildCommand": "pip install -r requirements.txt",
+  "installCommand": "",
+  "outputDirectory": "public",
+  "functions": {
+    "api/app.py": {
+      "maxDuration": 60
+    }
+  }
+}
