@@ -1,4 +1,4 @@
 {
-  "buildCommand": "pip install -r backend/requirements.txt",
+  "buildCommand": "uv pip install -r requirements.txt",
   "outputDirectory": "."
 }
