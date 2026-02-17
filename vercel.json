@@ -1,5 +1,6 @@
 {
   "buildCommand": "uv pip install --system -r requirements.txt",
   "installCommand": "",
-  "framework": null
+  "framework": null,
+  "outputDirectory": null
 }
