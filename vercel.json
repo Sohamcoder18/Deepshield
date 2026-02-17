@@ -2,5 +2,10 @@
   "buildCommand": "uv pip install --system -r requirements.txt",
   "installCommand": "",
   "framework": null,
-  "outputDirectory": null
+  "outputDirectory": "public",
+  "functions": {
+    "api/app.py": {
+      "maxDuration": 60
+    }
+  }
 }
