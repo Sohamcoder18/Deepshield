@@ -272,6 +272,21 @@ def allowed_file(filename, file_type):
     return ext in app.config['ALLOWED_EXTENSIONS'].get(file_type, set())
 
 # ============================================
+# ROOT ENDPOINT
+# ============================================
+
+@app.route('/', methods=['GET'])
+def root():
+    """Root endpoint - API welcome page"""
+    return jsonify({
+        'name': 'Deepshield - Deepfake Detection API',
+        'description': 'Backend API running on Vercel. Use the API endpoints to detect deepfakes.',
+        'documentation': '/api-docs',
+        'health_check': '/api/health',
+        'status': 'operational'
+    })
+
+# ============================================
 # HEALTH CHECK ENDPOINTS
 # ============================================
 
