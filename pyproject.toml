@@ -1,12 +1,9 @@
-[build-system]
-requires = ["setuptools>=45", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "deepshield"
-version = "0.1.0"
-description = "Deepfake Detection API"
-requires-python = ">=3.9,<3.12"
+version = "1.0.0"
+description = "Deepfake detection system"
+requires-python = ">=3.9"
 
-[tool.setuptools]
-packages = ["backend"]
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
