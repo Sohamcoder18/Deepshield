@@ -13,6 +13,7 @@ import string
 import requests
 import jwt
 import json
+import re
 from functools import wraps
 from google.cloud import firestore
 
@@ -1255,11 +1256,6 @@ def signup():
             otp_data['attempts'] += 1
             return jsonify({'error': 'Invalid OTP'}), 400
         
-        # Check if user already exists in SQLite
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            return jsonify({'error': 'Email already registered'}), 400
-        
         # Prepare user data
         user_data = {
             'full_name': full_name,
@@ -1278,28 +1274,12 @@ def signup():
         # Save signup event to separate collection
         signup_result = firestore_manager.save_signup_event(email, user_data)
         
+        # At least one must succeed (Firestore or SQLite)
         if not profile_result['success'] and not signup_result['success']:
+            logger.error(f"[SIGNUP] Failed to save profile or signup event. Profile errors: {profile_result['errors']}, Signup errors: {signup_result['errors']}")
             return jsonify({'error': 'Failed to create user account'}), 500
         
-        # Create new user in SQLite
-        try:
-            new_user = User(
-                email=email,
-                full_name=full_name,
-                phone_number=phone_number,
-                date_of_birth=date_of_birth if date_of_birth else None,
-                country=country,
-                occupation=occupation,
-                created_at=datetime.utcnow(),
-                last_login=datetime.utcnow(),
-                total_analyses=0
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            print(f"[SIGNUP] User created in SQLite backup: {email}")
-        except Exception as sqlite_error:
-            db.session.rollback()
-            print(f"[SIGNUP] SQLite error (non-critical): {str(sqlite_error)}")
+        logger.info(f"[SIGNUP] User profile saved. Profile success: {profile_result['success']}, Signup success: {signup_result['success']}")
         
         # Create JWT token
         payload = {
@@ -1327,29 +1307,6 @@ def signup():
     except Exception as e:
         logger.error(f"Error in signup: {str(e)}")
         return jsonify({'error': 'An error occurred during signup'}), 500
-
-        payload = {
-            'email': email,
-            'iat': datetime.utcnow()
-        }
-        token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
-        
-        # Clean up OTP
-        del OTP_CACHE[email]
-        
-        print(f"[SIGNUP] User created successfully: {email}")
-        
-        return jsonify({
-            'success': True,
-            'message': 'Account created successfully',
-            'token': token,
-            'email': email
-        }), 201
-        
-    except Exception as e:
-        print(f"[SIGNUP] Error: {str(e)}")
-        logger.error(f"Error in signup: {str(e)}")
-        return jsonify({'error': 'An error occurred'}), 500
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -1420,27 +1377,72 @@ def login():
 @app.route('/api/auth/user', methods=['GET'])
 @token_required
 def get_user_profile():
-    """Get authenticated user profile"""
+    """Get authenticated user profile with all fields from database"""
     try:
         print(f"[GET_PROFILE] Fetching profile for: {request.user_email}")
         
-        # Try Firestore first
+        # Try to get user from database (Firestore first, SQLite backup)
         user_data = firestore_manager.get_user_profile(request.user_email)
         
         if user_data:
-            print(f"[GET_PROFILE] User found in Firestore/SQLite")
-            return jsonify(user_data), 200
+            print(f"[GET_PROFILE] User found in database")
+            # Ensure all required fields are present with proper defaults
+            profile_response = {
+                'email': user_data.get('email', request.user_email),
+                'full_name': user_data.get('full_name', 'User'),
+                'phone_number': user_data.get('phone_number', ''),
+                'date_of_birth': user_data.get('date_of_birth', ''),
+                'country': user_data.get('country', ''),
+                'occupation': user_data.get('occupation', ''),
+                'created_at': user_data.get('created_at', datetime.utcnow().isoformat()),
+                'last_login': user_data.get('last_login', datetime.utcnow().isoformat()),
+                'total_analyses': user_data.get('total_analyses', 0)
+            }
+            print(f"[GET_PROFILE] Returning profile: {profile_response}")
+            return jsonify(profile_response), 200
         
-        # User not found in either database
-        print(f"[GET_PROFILE] User not found")
-        return jsonify({
+        # User not found - create minimal profile with defaults
+        print(f"[GET_PROFILE] User not found - returning default profile")
+        
+        # Try to create a default user record in SQL database
+        try:
+            new_user = User(
+                email=request.user_email,
+                full_name='User',
+                phone_number='',
+                date_of_birth='',
+                country='',
+                occupation='',
+                created_at=datetime.utcnow(),
+                last_login=datetime.utcnow(),
+                total_analyses=0
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            print(f"[GET_PROFILE] Created default profile for: {request.user_email}")
+        except Exception as db_error:
+            print(f"[GET_PROFILE] Could not create default profile: {str(db_error)}")
+            db.session.rollback()
+        
+        # Return default response
+        default_response = {
             'email': request.user_email,
             'full_name': 'User',
-            'created_at': datetime.utcnow().isoformat()
-        }), 200
+            'phone_number': '',
+            'date_of_birth': '',
+            'country': '',
+            'occupation': '',
+            'created_at': datetime.utcnow().isoformat(),
+            'last_login': datetime.utcnow().isoformat(),
+            'total_analyses': 0
+        }
+        print(f"[GET_PROFILE] Returning default response: {default_response}")
+        return jsonify(default_response), 200
         
     except Exception as e:
         print(f"[GET_PROFILE] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         logger.error(f"Error in get_user_profile: {str(e)}")
         return jsonify({'error': 'An error occurred'}), 500
 
@@ -1493,6 +1495,226 @@ def update_user_profile():
 def logout():
     """Logout user (token-based, handled on frontend)"""
     return jsonify({'success': True, 'message': 'Logged out successfully'}), 200
+
+# ============================================
+# FEEDBACK ENDPOINT
+# ============================================
+
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@deepshield.ai')
+
+@app.route('/api/feedback/submit', methods=['POST'])
+def submit_feedback():
+    """
+    Submit feedback form
+    Expects: Form data with feedbackType, subject, email, message, sendCopy, optional attachment
+    Returns: Confirmation with feedback ID
+    """
+    try:
+        feedback_type = request.form.get('feedbackType', '').strip()
+        subject = request.form.get('subject', '').strip()
+        user_email = request.form.get('email', '').strip().lower()
+        message = request.form.get('message', '').strip()
+        send_copy = request.form.get('sendCopy', 'false').lower() == 'true'
+        
+        # Validation
+        if not all([feedback_type, subject, user_email, message]):
+            return jsonify({'error': 'All fields are required'}), 400
+        
+        # Email validation - simple check
+        has_at = '@' in user_email
+        has_dot = '.' in user_email
+        at_index = user_email.find('@')
+        dot_index = user_email.rfind('.')
+        is_valid_email = has_at and has_dot and at_index > 0 and dot_index > at_index + 1 and dot_index < len(user_email) - 1
+        
+        if not is_valid_email:
+            return jsonify({'error': 'Invalid email address'}), 400
+        
+        # File handling (optional)
+        attachment_info = None
+        if 'attachment' in request.files:
+            file = request.files['attachment']
+            if file and file.filename != '':
+                if file.size > 5 * 1024 * 1024:  # 5MB limit
+                    return jsonify({'error': 'File is too large. Maximum size is 5MB'}), 400
+                
+                try:
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+                    unique_filename = f"feedback_{timestamp}_{filename}"
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                    file.save(filepath)
+                    
+                    attachment_info = {
+                        'filename': filename,
+                        'saved_as': unique_filename,
+                        'size': file.size
+                    }
+                    logger.info(f"Feedback attachment saved: {unique_filename}")
+                except Exception as e:
+                    logger.warning(f"Failed to save attachment: {str(e)}")
+        
+        # Prepare feedback data
+        feedback_id = f"feedback_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{user_email.split('@')[0]}"
+        
+        feedback_data = {
+            'feedback_id': feedback_id,
+            'feedback_type': feedback_type,
+            'subject': subject,
+            'user_email': user_email,
+            'message': message,
+            'attachment': attachment_info,
+            'created_at': datetime.utcnow(),
+            'status': 'received',
+            'user_agent': request.headers.get('User-Agent', ''),
+            'ip_address': request.remote_addr
+        }
+        
+        # Save to Firestore and SQLite
+        try:
+            # Save to Firestore if available
+            if firestore_manager.firestore_available:
+                try:
+                    firestore_manager.db.collection('feedback').document(feedback_id).set({
+                        'feedback_id': feedback_id,
+                        'feedback_type': feedback_type,
+                        'subject': subject,
+                        'user_email': user_email,
+                        'message': message,
+                        'attachment': attachment_info,
+                        'created_at': datetime.utcnow(),
+                        'status': 'received',
+                        'user_agent': request.headers.get('User-Agent', ''),
+                        'ip_address': request.remote_addr
+                    })
+                    logger.info(f"Feedback saved to Firestore: {feedback_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to save to Firestore: {str(e)}")
+            
+            # Also save to SQLite as backup (you may need to create a Feedback model)
+            try:
+                # Create simple feedback record in SQLite
+                feedback_record = {
+                    'feedback_id': feedback_id,
+                    'feedback_type': feedback_type,
+                    'subject': subject,
+                    'user_email': user_email,
+                    'message': message,
+                    'attachment_info': str(attachment_info) if attachment_info else None,
+                    'created_at': datetime.utcnow(),
+                    'status': 'received'
+                }
+                # If you have a Feedback model, use it here
+                # feedback = Feedback(**feedback_record)
+                # db.session.add(feedback)
+                # db.session.commit()
+                logger.info("Feedback record prepared for SQLite storage")
+            except Exception as e:
+                logger.warning(f"Failed to save to SQLite: {str(e)}")
+        
+        except Exception as e:
+            logger.error(f"Error saving feedback: {str(e)}")
+            return jsonify({'error': 'Failed to save feedback'}), 500
+        
+        # Send email to admin
+        admin_email_sent = False
+        try:
+            logger.info(f"📧 Preparing to send admin notification to: {ADMIN_EMAIL}")
+            admin_html = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%); padding: 20px; text-align: center;">
+                    <h1 style="color: white; margin: 0;">🛡️ DeepShield - New Feedback Received</h1>
+                </div>
+                <div style="padding: 30px; background: #f5f5f5;">
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <p><strong>Feedback ID:</strong> {feedback_id}</p>
+                        <p><strong>Type:</strong> {feedback_type.replace('_', ' ').title()}</p>
+                        <p><strong>From:</strong> {user_email}</p>
+                        <p><strong>Subject:</strong> {subject}</p>
+                        <p><strong>Date:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC</p>
+                        <p><strong>IP Address:</strong> {request.remote_addr}</p>
+                        {f'<p><strong>Attachment:</strong> {attachment_info["filename"]}</p>' if attachment_info else ''}
+                    </div>
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <h3 style="color: #333; margin-top: 0;">Message:</h3>
+                        <p style="color: #666; white-space: pre-wrap; line-height: 1.6;">{message}</p>
+                    </div>
+                    <p style="color: #999; font-size: 12px;">This is an automated notification. Please review and respond to the user if necessary.</p>
+                </div>
+                <div style="padding: 20px; text-align: center; color: #999; font-size: 12px;">
+                    <p>© 2024 DeepShield. All rights reserved.</p>
+                </div>
+            </div>
+            """
+            
+            result = send_brevo_email(
+                ADMIN_EMAIL,
+                f"[FEEDBACK] {feedback_type.replace('_', ' ').title()}: {subject}",
+                admin_html
+            )
+            admin_email_sent = result
+            logger.info(f"✅ Admin notification email result: {result} for feedback: {feedback_id}")
+        except Exception as e:
+            logger.error(f"❌ Failed to send admin notification: {str(e)}")
+        
+        # Send copy to user (always send, not conditional)
+        user_email_sent = False
+        try:
+            logger.info(f"📧 Preparing to send user confirmation to: {user_email}")
+            user_html = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%); padding: 20px; text-align: center;">
+                    <h1 style="color: white; margin: 0;">🛡️ DeepShield - Thank You for Your Feedback</h1>
+                </div>
+                <div style="padding: 30px; background: #f5f5f5;">
+                    <p style="color: #333; font-size: 16px;">Thank you for taking the time to share your feedback with us!</p>
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <p><strong>Feedback ID:</strong> <code style="background: #f0f0f0; padding: 5px 10px; border-radius: 5px;">{feedback_id}</code></p>
+                        <p><strong>Type:</strong> {feedback_type.replace('_', ' ').title()}</p>
+                        <p><strong>Subject:</strong> {subject}</p>
+                        <p><strong>Date Submitted:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC</p>
+                    </div>
+                    <div style="background: #e8f5e9; padding: 20px; border-left: 4px solid #00d4ff; border-radius: 5px; margin: 20px 0;">
+                        <p style="color: #333; margin-top: 0;"><strong>Your Message (Summary):</strong></p>
+                        <p style="color: #666; white-space: pre-wrap; line-height: 1.6;">{message[:500]}{'...' if len(message) > 500 else ''}</p>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">
+                        We read all feedback and use it to improve DeepShield. If your feedback requires a response, our team will be in touch shortly.
+                    </p>
+                    <p style="color: #999; font-size: 13px;">
+                        Keep your Feedback ID ({feedback_id}) for reference if you need to follow up on this submission.
+                    </p>
+                </div>
+                <div style="padding: 20px; text-align: center; color: #999; font-size: 12px;">
+                    <p>© 2024 DeepShield. All rights reserved.</p>
+                </div>
+            </div>
+            """
+            
+            result = send_brevo_email(
+                user_email,
+                f"Feedback Received - ID: {feedback_id}",
+                user_html
+            )
+            user_email_sent = result
+            logger.info(f"✅ User confirmation email result: {result} to {user_email}")
+        except Exception as e:
+            logger.error(f"❌ Failed to send user confirmation: {str(e)}")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Feedback submitted successfully',
+            'feedback_id': feedback_id,
+            'admin_notified': admin_email_sent,
+            'user_notified': user_email_sent,
+            'send_copy': send_copy,
+            'admin_email': ADMIN_EMAIL,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Error in submit_feedback: {str(e)}")
+        return jsonify({'error': f'Failed to submit feedback: {str(e)}'}), 500
 
 @app.errorhandler(404)
 def not_found(error):

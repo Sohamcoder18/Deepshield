@@ -61,8 +61,9 @@ function clearError() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    setupUploadArea();
+    initializeNavbar();
     setupNavigation();
+    setupUploadArea();
 });
 
 function logout() {
@@ -138,13 +139,24 @@ function handleFileSelect(file) {
 
 function clearFile() {
     currentFile = null;
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileInfo').style.display = 'none';
-    document.getElementById('uploadArea').style.display = 'block';
-    document.getElementById('previewSection').style.display = 'none';
-    document.getElementById('frameSelection').style.display = 'none';
     
+    // Clear file input
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    
+    // Reset UI elements
+    const fileInfo = document.getElementById('fileInfo');
+    const uploadArea = document.getElementById('uploadArea');
+    const previewSection = document.getElementById('previewSection');
+    const frameSelection = document.getElementById('frameSelection');
     const analyzeBtn = document.getElementById('analyzeBtn');
+    
+    if (fileInfo) fileInfo.style.display = 'none';
+    if (uploadArea) uploadArea.style.display = 'block';
+    if (previewSection) previewSection.style.display = 'none';
+    if (frameSelection) frameSelection.style.display = 'none';
     if (analyzeBtn) analyzeBtn.style.display = 'none';
     
     clearResults();
@@ -1169,14 +1181,58 @@ function analyzeAnother() {
 }
 
 // ============================================
-// NAVIGATION
+// NAVIGATION & NAVBAR SETUP
 // ============================================
+
+function initializeNavbar() {
+    const token = localStorage.getItem('authToken');
+    const userEmail = localStorage.getItem('userEmail');
+    const profileLink = document.getElementById('profileLink');
+    const navLinks = document.querySelector('.nav-links');
+    
+    if (!profileLink || !navLinks) return;
+    
+    // Remove existing logout button if any
+    const existingLogout = document.getElementById('logoutBtn');
+    if (existingLogout) existingLogout.remove();
+    
+    if (token && userEmail) {
+        // Show profile link with user email
+        profileLink.style.display = 'block';
+        profileLink.textContent = userEmail;
+        
+        // Create logout button
+        const logoutLi = document.createElement('li');
+        logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
+        navLinks.appendChild(logoutLi);
+        
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            window.location.href = 'login.html';
+        });
+    } else {
+        // Hide profile link if not logged in
+        profileLink.style.display = 'none';
+    }
+}
 
 function setupNavigation() {
     const navLinks = document.querySelectorAll('.nav-links a');
     navLinks.forEach(link => {
-        if (link.getAttribute('href') === window.location.pathname) {
+        const href = link.getAttribute('href');
+        const currentPath = window.location.pathname;
+        
+        // Check if this link matches the current page
+        if (href && (
+            currentPath.endsWith(href) || 
+            currentPath.endsWith(href.split('#')[0])
+        )) {
             link.classList.add('active');
+        } else {
+            link.classList.remove('active');
         }
     });
 }
@@ -1639,4 +1695,275 @@ if (document.readyState === 'loading') {
 } else {
     animateNumbers();
 }
+
+// ============================================
+// FEEDBACK FORM FUNCTIONALITY
+// ============================================
+
+let feedbackAttachment = null;
+let authenticatedUserEmail = null;
+
+// Initialize feedback form
+function initializeFeedbackForm() {
+    console.log('=== INITIALIZING FEEDBACK FORM ===');
+    
+    // Check if user is authenticated
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    const userEmail = localStorage.getItem('userEmail');
+    
+    console.log('Token exists:', !!token);
+    console.log('User email in localStorage:', userEmail);
+    
+    // If not logged in, show message and redirect
+    if (!token || !userEmail) {
+        console.warn('⚠️  User not authenticated');
+        const feedbackForm = document.getElementById('feedbackForm');
+        if (feedbackForm) {
+            feedbackForm.style.display = 'none';
+        }
+        
+        const errorMessage = document.getElementById('errorMessage');
+        if (errorMessage) {
+            errorMessage.style.display = 'block';
+            document.getElementById('errorText').textContent = 'You must be logged in to submit feedback. Redirecting to login...';
+        }
+        
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        return;
+    }
+    
+    // Set authenticated user email
+    authenticatedUserEmail = userEmail;
+    console.log('✓ User authenticated:', authenticatedUserEmail);
+    
+    // Display user email
+    document.getElementById('userEmail').value = authenticatedUserEmail;
+    document.getElementById('userEmailText').textContent = authenticatedUserEmail;
+    
+    const uploadArea = document.querySelector('.feedback-upload-area');
+    const messageTextarea = document.getElementById('message');
+    
+    if (!uploadArea || !messageTextarea) {
+        console.error('❌ Required DOM elements not found');
+        return;
+    }
+    
+    // File upload handler
+    uploadArea.addEventListener('click', () => {
+        document.getElementById('attachment').click();
+    });
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#00d4ff';
+        uploadArea.style.background = 'rgba(0, 212, 255, 0.1)';
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = 'rgba(0, 212, 255, 0.3)';
+        uploadArea.style.background = 'rgba(0, 0, 0, 0.2)';
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'rgba(0, 212, 255, 0.3)';
+        uploadArea.style.background = 'rgba(0, 0, 0, 0.2)';
+        
+        if (e.dataTransfer.files.length > 0) {
+            handleFeedbackFileSelection(e.dataTransfer.files[0]);
+        }
+    });
+    
+    // File input change
+    document.getElementById('attachment').addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFeedbackFileSelection(e.target.files[0]);
+        }
+    });
+    
+    // Character counter
+    messageTextarea.addEventListener('input', (e) => {
+        const count = e.target.value.length;
+        document.getElementById('charCount').textContent = `${count} / 2000 characters`;
+    });
+    
+    console.log('✓ Feedback form initialized');
+}
+
+function handleFeedbackFileSelection(file) {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    console.log('File selected:', file.name, 'Size:', file.size);
+    
+    if (file.size > maxSize) {
+        showErrorAlert(`File is too large. Maximum size is 5MB.`);
+        return;
+    }
+    
+    feedbackAttachment = file;
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    
+    fileName.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+    fileInfo.style.display = 'block';
+    document.querySelector('.feedback-upload-area').style.display = 'none';
+    
+    console.log('✓ File selected:', file.name);
+}
+
+function clearFeedbackFile() {
+    feedbackAttachment = null;
+    document.getElementById('attachment').value = '';
+    document.getElementById('fileInfo').style.display = 'none';
+    document.querySelector('.feedback-upload-area').style.display = 'block';
+    console.log('✓ File cleared');
+}
+
+async function submitFeedback(event) {
+    event.preventDefault();
+    console.log('=== SUBMITTING FEEDBACK ===');
+    
+    const feedbackType = document.getElementById('feedbackType').value;
+    const subject = document.getElementById('subject').value.trim();
+    const userEmail = document.getElementById('userEmail').value.trim();
+    const message = document.getElementById('message').value.trim();
+    const sendCopy = document.getElementById('sendCopy').checked;
+    
+    console.log('Form data:', {
+        feedbackType,
+        subject,
+        userEmail,
+        messageLength: message.length,
+        sendCopy,
+        hasAttachment: !!feedbackAttachment
+    });
+    
+    // Validation
+    if (!feedbackType || !subject || !userEmail || !message) {
+        console.warn('⚠️  Missing required fields');
+        showErrorAlert('Please fill in all required fields.');
+        return;
+    }
+    
+    // Email validation - simple check
+    console.log('📧 Validating email:', userEmail, 'Length:', userEmail.length);
+    const hasAtSign = userEmail.includes('@');
+    const hasDot = userEmail.includes('.');
+    const atIndex = userEmail.indexOf('@');
+    const dotIndex = userEmail.lastIndexOf('.');
+    const isValidEmail = hasAtSign && hasDot && atIndex > 0 && dotIndex > atIndex + 1 && dotIndex < userEmail.length - 1;
+    
+    console.log('Email validation:', {hasAtSign, hasDot, atIndex, dotIndex, isValidEmail});
+    
+    if (!isValidEmail) {
+        console.warn('⚠️  Invalid email format');
+        showErrorAlert('Please enter a valid email address.');
+        return;
+    }
+    
+    // Show loading spinner
+    const feedbackForm = document.getElementById('feedbackForm');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    feedbackForm.style.display = 'none';
+    loadingSpinner.style.display = 'flex';
+    successMessage.style.display = 'none';
+    errorMessage.style.display = 'none';
+    
+    try {
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('feedbackType', feedbackType);
+        formData.append('subject', subject);
+        formData.append('email', userEmail);
+        formData.append('message', message);
+        formData.append('sendCopy', sendCopy);
+        
+        if (feedbackAttachment) {
+            formData.append('attachment', feedbackAttachment);
+            console.log('📎 Attaching file:', feedbackAttachment.name);
+        }
+        
+        console.log('📤 Sending feedback to backend...');
+        
+        // Submit to backend
+        const response = await fetch('http://localhost:5000/api/feedback/submit', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Authorization': localStorage.getItem('authToken') || localStorage.getItem('token') || ''
+            }
+        });
+        
+        console.log('📥 Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to submit feedback');
+        }
+        
+        // Success
+        loadingSpinner.style.display = 'none';
+        successMessage.style.display = 'block';
+        console.log('✅ Feedback submitted successfully');
+        console.log('Feedback ID:', data.feedback_id);
+        
+    } catch (error) {
+        console.error('❌ Feedback submission error:', error);
+        loadingSpinner.style.display = 'none';
+        errorMessage.style.display = 'block';
+        document.getElementById('errorText').textContent = error.message || 'An error occurred while submitting your feedback. Please try again.';
+        feedbackForm.style.display = 'block';
+    }
+}
+
+function showErrorAlert(message) {
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorMessage) {
+        document.getElementById('errorText').textContent = message;
+        errorMessage.style.display = 'block';
+    }
+    window.scrollTo(0, 0);
+}
+
+function hideErrorMessage() {
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorMessage) {
+        errorMessage.style.display = 'none';
+    }
+}
+
+function resetForm() {
+    document.getElementById('feedbackForm').reset();
+    feedbackAttachment = null;
+    clearFeedbackFile();
+    document.getElementById('feedbackForm').style.display = 'block';
+    document.getElementById('successMessage').style.display = 'none';
+    document.getElementById('loadingSpinner').style.display = 'none';
+    document.getElementById('charCount').textContent = '0 / 2000 characters';
+    window.scrollTo(0, 0);
+    console.log('✓ Form reset');
+}
+
+// Initialize feedback form when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.location.pathname.includes('feedback')) {
+            console.log('📝 Feedback page detected, initializing...');
+            initializeFeedbackForm();
+        }
+    });
+} else {
+    if (window.location.pathname.includes('feedback')) {
+        console.log('📝 Feedback page detected, initializing...');
+        initializeFeedbackForm();
+    }
+}
+
 

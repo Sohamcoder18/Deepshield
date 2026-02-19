@@ -6,6 +6,16 @@
     <title>User Profile - DeepShield</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="animations.css">
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const userEmail = localStorage.getItem('userEmail');
+        
+        if (!authToken || !userEmail) {
+            // Redirect to login page if not authenticated
+            window.location.href = 'login.html';
+        }
+    </script>
     <style>
         .profile-container {
             min-height: 100vh;
@@ -261,24 +271,177 @@
         }
 
         @media (max-width: 768px) {
+            .profile-container {
+                padding: 20px 15px;
+            }
+
             .profile-card {
                 padding: 20px;
+                border-radius: 8px;
             }
 
             .profile-header h1 {
                 font-size: 24px;
             }
 
+            .profile-header p {
+                font-size: 14px;
+            }
+
+            .profile-section {
+                margin-bottom: 20px;
+                padding-bottom: 20px;
+            }
+
+            .profile-section h2 {
+                font-size: 18px;
+                margin-bottom: 15px;
+            }
+
             .profile-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .profile-item label {
+                font-size: 12px;
+            }
+
+            .profile-item p {
+                font-size: 14px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .stat-label {
+                font-size: 12px;
             }
 
             .profile-actions {
                 flex-direction: column;
+                gap: 10px;
             }
 
             .btn {
                 width: 100%;
+                padding: 12px 16px;
+                font-size: 14px;
+                min-height: 44px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-container {
+                padding: 15px 10px;
+            }
+
+            .profile-card {
+                padding: 15px;
+                border-radius: 6px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            }
+
+            .profile-header h1 {
+                font-size: 20px;
+            }
+
+            .profile-header p {
+                font-size: 12px;
+            }
+
+            .profile-section {
+                margin-bottom: 15px;
+                padding-bottom: 15px;
+            }
+
+            .profile-section h2 {
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .profile-item {
+                padding: 10px;
+            }
+
+            .profile-item label {
+                font-size: 11px;
+                margin-bottom: 5px;
+            }
+
+            .profile-item p {
+                font-size: 13px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 15px;
+                text-align: center;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+                margin-top: 5px;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 10px 14px;
+                font-size: 13px;
+                min-height: 42px;
+                border-radius: 6px;
+            }
+
+            input, textarea, select {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 360px) {
+            .profile-header h1 {
+                font-size: 18px;
+            }
+
+            .profile-section h2 {
+                font-size: 15px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
             }
         }
     </style>
@@ -297,8 +460,9 @@
                 <li><a href="video-detection.html">Video Detection</a></li>
                 <li><a href="audio-detection.html">Audio Detection</a></li>
                 <li><a href="ai-assistant.html">AI Assistant</a></li>
-                <li><a href="profile.html" id="profileLink" class="profile-name active" style="display: none;"></a></li>
+                <li><a href="feedback.html">Feedback</a></li>
                 <li><a href="index.html#about">About</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
             </ul>
         </div>
     </nav>
@@ -358,10 +522,6 @@
                 <div class="profile-section">
                     <h2>📊 Account Statistics</h2>
                     <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value" id="totalAnalyses">0</div>
-                            <div class="stat-label">Total Analyses</div>
-                        </div>
                         <div class="stat-card">
                             <div class="stat-value" id="memberSince">-</div>
                             <div class="stat-label">Member Since</div>
@@ -428,7 +588,8 @@
         async function loadProfile() {
             try {
                 const token = localStorage.getItem('authToken');
-                console.log('Loading profile with token:', token);
+                const userEmail = localStorage.getItem('userEmail');
+                console.log('Loading profile - Token:', token ? 'exists' : 'missing', 'Email:', userEmail);
                 
                 const response = await fetch('http://localhost:5000/api/auth/user', {
                     method: 'GET',
@@ -442,7 +603,9 @@
 
                 if (!response.ok) {
                     if (response.status === 401) {
+                        console.log('Unauthorized - redirecting to login');
                         localStorage.removeItem('authToken');
+                        localStorage.removeItem('userEmail');
                         window.location.href = 'login.html';
                         return;
                     }
@@ -453,7 +616,17 @@
 
                 const user = await response.json();
                 console.log('User data received:', user);
-                displayProfile(user);
+                console.log('Full name:', user.full_name);
+                console.log('Phone:', user.phone_number);
+                console.log('Country:', user.country);
+                console.log('Total analyses:', user.total_analyses);
+                
+                if (user && user.email) {
+                    displayProfile(user);
+                } else {
+                    console.warn('Invalid user data received');
+                    displayFallbackProfile();
+                }
             } catch (error) {
                 console.error('Error:', error);
                 showError('Failed to load profile: ' + error.message);
@@ -469,40 +642,55 @@
         
         function displayFallbackProfile() {
             const userEmail = localStorage.getItem('userEmail') || 'Not provided';
+            console.log('Displaying fallback profile');
             document.getElementById('email').textContent = userEmail;
             document.getElementById('fullName').textContent = 'User';
             document.getElementById('phoneNumber').textContent = '-';
             document.getElementById('dateOfBirth').textContent = '-';
             document.getElementById('country').textContent = '-';
             document.getElementById('occupation').textContent = '-';
-            document.getElementById('totalAnalyses').textContent = '0';
             document.getElementById('memberSince').textContent = '-';
             document.getElementById('lastActive').textContent = '-';
         }
 
         function displayProfile(user) {
+            console.log('Displaying profile:', user);
+            
+            // Helper function to display values - show "-" for empty/missing values
+            const displayValue = (value) => {
+                if (!value || value === '' || value === '-') return '-';
+                return value;
+            };
+            
             // Personal Information
-            document.getElementById('fullName').textContent = user.full_name || '-';
-            document.getElementById('email').textContent = user.email || '-';
-            document.getElementById('phoneNumber').textContent = user.phone_number || '-';
-            document.getElementById('dateOfBirth').textContent = formatDate(user.date_of_birth) || '-';
-            document.getElementById('country').textContent = user.country || '-';
-            document.getElementById('occupation').textContent = user.occupation || '-';
+            document.getElementById('fullName').textContent = displayValue(user.full_name) !== '-' ? user.full_name : 'User';
+            document.getElementById('email').textContent = displayValue(user.email);
+            document.getElementById('phoneNumber').textContent = displayValue(user.phone_number);
+            document.getElementById('dateOfBirth').textContent = displayValue(formatDate(user.date_of_birth));
+            document.getElementById('country').textContent = displayValue(user.country);
+            document.getElementById('occupation').textContent = displayValue(user.occupation);
 
             // Statistics
-            document.getElementById('totalAnalyses').textContent = user.total_analyses || 0;
-            document.getElementById('memberSince').textContent = formatDate(user.created_at) || '-';
-            document.getElementById('lastActive').textContent = formatDate(user.last_login) || '-';
+            document.getElementById('memberSince').textContent = displayValue(formatDate(user.created_at));
+            document.getElementById('lastActive').textContent = displayValue(formatDate(user.last_login));
+            
+            console.log('Profile displayed successfully');
         }
 
         function formatDate(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
+            if (!dateString || dateString === '-') return '';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return '';
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                console.error('Error formatting date:', e);
+                return '';
+            }
         }
 
         function showError(message) {
@@ -600,51 +788,15 @@
             }
         }
 
-        // Authentication Check & Navigation Setup
-        function checkAuthentication() {
+        document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('authToken');
             if (!token) {
-                // Redirect to login if no token
                 window.location.href = 'login.html';
-                return false;
+                return;
             }
-            return true;
-        }
-
-        function setupNavigation() {
-            const token = localStorage.getItem('authToken');
-            const userEmail = localStorage.getItem('userEmail');
-            const profileLink = document.getElementById('profileLink');
-            const navLinks = document.querySelector('.nav-links');
-            
-            // Remove existing logout button if any
-            const existingLogout = document.getElementById('logoutBtn');
-            if (existingLogout) existingLogout.remove();
-            
-            if (token) {
-                profileLink.style.display = 'block';
-                // Display user email as profile name
-                profileLink.textContent = userEmail || 'Profile';
-                
-                // Create logout button
-                const logoutLi = document.createElement('li');
-                logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
-                navLinks.appendChild(logoutLi);
-                
-                // Logout functionality
-                document.getElementById('logoutBtn').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('userEmail');
-                    window.location.href = 'login.html';
-                });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuthentication();
-            setupNavigation();
+            loadProfile();
         });
     </script>
+    <script src="script.js"></script>
 </body>
 </html>

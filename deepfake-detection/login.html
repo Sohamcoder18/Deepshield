@@ -249,19 +249,143 @@
             to { transform: rotate(360deg); }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 15px;
+            }
+
             .auth-card {
                 padding: 30px 20px;
+                border-radius: 8px;
             }
 
             .auth-header h1 {
                 font-size: 24px;
             }
 
+            .auth-header p {
+                font-size: 13px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .form-group label {
+                font-size: 13px;
+            }
+
+            .form-group input {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
             .otp-input {
-                width: 40px;
-                height: 40px;
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+
+            .submit-btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 10px;
+                min-height: auto;
+            }
+
+            .auth-card {
+                padding: 20px 15px;
+                border-radius: 6px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            }
+
+            .auth-header .logo-icon {
+                font-size: 40px;
+                margin-bottom: 10px;
+            }
+
+            .auth-header h1 {
+                font-size: 20px;
+            }
+
+            .auth-header p {
+                font-size: 12px;
+                margin-top: 6px;
+            }
+
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            .form-group label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+
+            .form-group input {
+                padding: 8px 10px;
                 font-size: 16px;
+                border-radius: 6px;
+            }
+
+            .submit-btn {
+                padding: 8px;
+                font-size: 13px;
+                margin-top: 8px;
+            }
+
+            .divider {
+                margin: 20px 0;
+            }
+
+            .divider span {
+                font-size: 11px;
+                padding: 0 8px;
+            }
+
+            .auth-link {
+                font-size: 12px;
+            }
+
+            .otp-input {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+                margin: 0 4px;
+            }
+
+            .otp-container {
+                justify-content: center;
+                gap: 4px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .auth-card {
+                padding: 15px 12px;
+            }
+
+            .auth-header h1 {
+                font-size: 18px;
+            }
+
+            .form-group input {
+                font-size: 14px;
+            }
+
+            .submit-btn {
+                font-size: 12px;
+            }
+
+            .otp-input {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
             }
         }
     </style>

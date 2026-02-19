@@ -96,17 +96,91 @@ class MultiModelDeepfakeDetectionService:
         logger.info(f"Models: {list(self.models.keys())}")
     
     def _load_siglip_model(self, model_id, config):
-        """Load SIGLIP model"""
-        from transformers import AutoImageProcessor, SiglipForImageClassification
+        """Load SIGLIP model with fallback for missing processor config"""
+        from transformers import AutoImageProcessor, AutoProcessor, SiglipForImageClassification
+        import os
         
-        model = SiglipForImageClassification.from_pretrained(config["model_name"])
-        processor = AutoImageProcessor.from_pretrained(config["model_name"])
-        
-        model.to(self.device)
-        model.eval()
-        
-        self.models[model_id] = model
-        self.processors[model_id] = processor
+        try:
+            # Try loading model first
+            logger.info(f"Loading SIGLIP model: {config['model_name']}")
+            hf_token = os.getenv('HF_TOKEN', None)
+            
+            model = SiglipForImageClassification.from_pretrained(
+                config["model_name"],
+                token=hf_token,
+                trust_remote_code=False
+            )
+            
+            # Try AutoImageProcessor first
+            try:
+                processor = AutoImageProcessor.from_pretrained(
+                    config["model_name"],
+                    token=hf_token,
+                    trust_remote_code=False
+                )
+            except Exception as e:
+                error_str = str(e).lower()
+                if "404" in error_str or "processor_config" in error_str:
+                    logger.warning(f"Processor config not found (404), trying AutoProcessor fallback...")
+                    try:
+                        # Fallback to AutoProcessor
+                        processor = AutoProcessor.from_pretrained(
+                            config["model_name"],
+                            token=hf_token,
+                            trust_remote_code=False
+                        )
+                    except:
+                        # Last resort: create minimal processor
+                        logger.warning(f"Using minimal image processor fallback")
+                        from PIL import Image
+                        from torchvision import transforms
+                        
+                        # Create a minimal processor that handles image resizing
+                        class MinimalImageProcessor:
+                            def __init__(self):
+                                self.transform = transforms.Compose([
+                                    transforms.Resize((384, 384)),
+                                    transforms.ToTensor(),
+                                    transforms.Normalize(
+                                        mean=[0.5, 0.5, 0.5],
+                                        std=[0.5, 0.5, 0.5]
+                                    )
+                                ])
+                            
+                            def __call__(self, images=None, return_tensors=None, **kwargs):
+                                if isinstance(images, list):
+                                    images = [self.transform(img) if isinstance(img, Image.Image) else img for img in images]
+                                    images = torch.stack(images)
+                                else:
+                                    images = self.transform(images) if isinstance(images, Image.Image) else images
+                                    if images.dim() == 3:
+                                        images = images.unsqueeze(0)
+                                
+                                class ProcessorOutput:
+                                    def __init__(self, pixel_values):
+                                        self.pixel_values = pixel_values
+                                    
+                                    def to(self, device):
+                                        self.pixel_values = self.pixel_values.to(device)
+                                        return self
+                                
+                                return ProcessorOutput(images)
+                        
+                        processor = MinimalImageProcessor()
+                else:
+                    raise
+            
+            model.to(self.device)
+            model.eval()
+            
+            self.models[model_id] = model
+            self.processors[model_id] = processor
+            logger.info(f"✅ Successfully loaded SIGLIP model with processor")
+            
+        except Exception as e:
+            logger.error(f"Failed to load SIGLIP model: {str(e)}")
+            logger.warning(f"To authenticate with HuggingFace, set HF_TOKEN environment variable")
+            raise
     
     def _load_deepfake_v2_model(self, model_id, config):
         """Load DeepFake Detector v2 Model (ViT-based)"""

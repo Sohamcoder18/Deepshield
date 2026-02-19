@@ -6,6 +6,16 @@
     <title>DeepShield - Deepfake Detection System</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="animations.css">
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const userEmail = localStorage.getItem('userEmail');
+        
+        if (!authToken || !userEmail) {
+            // Redirect to login page if not authenticated
+            window.location.href = 'login.html';
+        }
+    </script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -21,8 +31,9 @@
                 <li><a href="video-detection.html">Video Detection</a></li>
                 <li><a href="audio-detection.html">Audio Detection</a></li>
                 <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="feedback.html">Feedback</a></li>
+                <li><a href="index.html#about">About</a></li>
                 <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
-                <li><a href="#about">About</a></li>
             </ul>
         </div>
     </nav>
@@ -234,54 +245,5 @@
     </footer>
 
     <script src="script.js"></script>
-    <script>
-        // Authentication Check & Navigation Setup
-        function checkAuthentication() {
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                // Redirect to login if no token
-                window.location.href = 'login.html';
-                return false;
-            }
-            return true;
-        }
-
-        function setupNavigation() {
-            const token = localStorage.getItem('authToken');
-            const userEmail = localStorage.getItem('userEmail');
-            const profileLink = document.getElementById('profileLink');
-            
-            // Add logout button to navbar
-            const navLinks = document.querySelector('.nav-links');
-            
-            // Remove existing logout button if any
-            const existingLogout = document.getElementById('logoutBtn');
-            if (existingLogout) existingLogout.remove();
-            
-            if (token) {
-                profileLink.style.display = 'block';
-                // Display user email as profile name
-                profileLink.textContent = userEmail || 'Profile';
-                
-                // Create logout button
-                const logoutLi = document.createElement('li');
-                logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
-                navLinks.appendChild(logoutLi);
-                
-                // Logout functionality
-                document.getElementById('logoutBtn').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('userEmail');
-                    window.location.href = 'login.html';
-                });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuthentication();
-            setupNavigation();
-        });
-    </script>
 </body>
 </html>
