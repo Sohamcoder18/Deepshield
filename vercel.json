@@ -1,5 +1,5 @@
 {
-  "buildCommand": "uv pip install --system --break-system-packages -r requirements.txt",
+  "buildCommand": "pip install -r requirements.txt",
   "installCommand": "",
   "framework": null,
   "functions": {
