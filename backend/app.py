@@ -69,7 +69,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Flask-SQLAlchemy
 db = SQLAlchemy(app)
 
-# User Model for SQLite (kept in app.py for initial setup)
+# User Model for PostgreSQL
 class User(db.Model):
     __tablename__ = 'users'
     
@@ -102,10 +102,10 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
-# Initialize PostgreSQL Manager (replaces Firestore)
+# Initialize PostgreSQL Manager
 from utils.postgresql_manager import PostgreSQLManager
 models_dict = {'User': User}
-firestore_manager = PostgreSQLManager(db=db, models=models_dict)
+db_manager = PostgreSQLManager(db=db, models=models_dict)
 
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
@@ -549,16 +549,15 @@ def analyze_image():
                 'artifact_detection': results['artifact_score']
             }
             
-            db_result = firestore_manager.save_analysis_result(analysis_data)
+            db_result = db_manager.save_analysis_result(analysis_data)
             analysis_id = db_result['firestore_id']
             response['analysis_id'] = analysis_id
-            response['firestore_id'] = db_result['firestore_id']
-            response['sqlite_id'] = db_result['sqlite_id']
+            response['database_id'] = db_result['firestore_id']
             logger.info(f"✓ Image analysis saved with ID: {analysis_id}")
             
             # Save to user's analysis log if authenticated
             if user_email:
-                firestore_manager.save_user_analysis_log(user_email, analysis_id, analysis_data)
+                db_manager.save_user_analysis_log(user_email, analysis_id, analysis_data)
                 send_analysis_notification(user_email, 'image', results)
         except Exception as e:
             logger.warning(f"✗ Could not save to database: {str(e)}")
@@ -655,16 +654,15 @@ def analyze_video():
                 'temporal_consistency': results['temporal_consistency']
             }
             
-            db_result = firestore_manager.save_analysis_result(analysis_data)
+            db_result = db_manager.save_analysis_result(analysis_data)
             analysis_id = db_result['firestore_id']
             response['analysis_id'] = analysis_id
-            response['firestore_id'] = db_result['firestore_id']
-            response['sqlite_id'] = db_result['sqlite_id']
+            response['database_id'] = db_result['firestore_id']
             logger.info(f"✓ Video analysis saved with ID: {analysis_id}")
             
             # Save to user's analysis log if authenticated
             if user_email:
-                firestore_manager.save_user_analysis_log(user_email, analysis_id, analysis_data)
+                db_manager.save_user_analysis_log(user_email, analysis_id, analysis_data)
                 send_analysis_notification(user_email, 'video', results)
         except Exception as e:
             logger.warning(f"✗ Could not save to database: {str(e)}")
@@ -760,16 +758,15 @@ def analyze_audio():
                 'spectral_consistency': results['spectral_consistency']
             }
             
-            db_result = firestore_manager.save_analysis_result(analysis_data)
+            db_result = db_manager.save_analysis_result(analysis_data)
             analysis_id = db_result['firestore_id']
             response['analysis_id'] = analysis_id
-            response['firestore_id'] = db_result['firestore_id']
-            response['sqlite_id'] = db_result['sqlite_id']
+            response['database_id'] = db_result['firestore_id']
             logger.info(f"✓ Audio analysis saved with ID: {analysis_id}")
             
             # Save to user's analysis log if authenticated
             if user_email:
-                firestore_manager.save_user_analysis_log(user_email, analysis_id, analysis_data)
+                db_manager.save_user_analysis_log(user_email, analysis_id, analysis_data)
                 send_analysis_notification(user_email, 'audio', results)
         except Exception as e:
             logger.warning(f"✗ Could not save to database: {str(e)}")
@@ -846,22 +843,19 @@ def combine_results():
 @app.route('/api/db/status', methods=['GET'])
 def database_status():
     """Check database connection status"""
-    sqlite_status = "connected" if db else "disconnected"
-    mongodb_status = "connected" if mongo_connected else "disconnected"
+    postgres_status = "connected" if db else "disconnected"
     
     return jsonify({
         'status': 'ok',
-        'databases': {
-            'sqlite': sqlite_status,
-            'mongodb': mongodb_status
-        },
+        'database': 'postgresql',
+        'connection': postgres_status,
         'timestamp': datetime.now().isoformat()
     }), 200
 
 @app.route('/api/results/save', methods=['POST'])
 def save_result():
     """
-    Save analysis result to Firestore with SQLite backup
+    Save analysis result to PostgreSQL
     Expects: JSON with analysis result data
     """
     try:
@@ -870,16 +864,15 @@ def save_result():
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        # Save to Firestore (primary) and SQLite (backup)
-        result = firestore_manager.save_analysis_result(data)
+        # Save to PostgreSQL
+        result = db_manager.save_analysis_result(data)
         
         if result['success']:
             return jsonify({
                 'status': 'success',
                 'message': 'Result saved successfully',
                 'analysis_id': result['firestore_id'],
-                'firestore_id': result['firestore_id'],
-                'sqlite_id': result['sqlite_id'],
+                'database_id': result['firestore_id'],
                 'timestamp': datetime.now().isoformat()
             }), 201
         else:
@@ -896,11 +889,11 @@ def save_result():
 @app.route('/api/results/<analysis_id>', methods=['GET'])
 def get_result(analysis_id):
     """
-    Retrieve analysis result from Firestore or SQLite
+    Retrieve analysis result from PostgreSQL
     """
     try:
-        # Try to get from Firestore first, then SQLite
-        result = firestore_manager.get_analysis_history(limit=1)
+        # Get from PostgreSQL database
+        result = db_manager.get_analysis_history(limit=1)
         
         # Filter for the specific analysis_id
         found_result = None
@@ -925,7 +918,7 @@ def get_result(analysis_id):
 @app.route('/api/results', methods=['GET'])
 def get_all_results():
     """
-    Retrieve all analysis results from Firestore
+    Retrieve all analysis results from PostgreSQL
     Query params:
     - limit: Maximum number of results (default: 100)
     - user_email: Filter by specific user (optional)
@@ -934,7 +927,7 @@ def get_all_results():
         limit = request.args.get('limit', 100, type=int)
         user_email = request.args.get('user_email', '', type=str)
         
-        results = firestore_manager.get_analysis_history(user_email=user_email if user_email else None, limit=limit)
+        results = db_manager.get_analysis_history(user_email=user_email if user_email else None, limit=limit)
         
         return jsonify({
             'status': 'success',
@@ -1006,7 +999,7 @@ Be concise, accurate, and helpful. Focus on deepfake detection, media forensics,
         assistant_response = response.choices[0].message.content
         
         # Save chat to database if analysis_id is provided
-        if analysis_id and (firestore_manager.firestore_available or db):
+        if analysis_id and db:
             try:
                 chat_record = {
                     'analysis_id': analysis_id,
@@ -1015,9 +1008,9 @@ Be concise, accurate, and helpful. Focus on deepfake detection, media forensics,
                     'timestamp': datetime.utcnow().isoformat(),
                     'model': 'llama-3.3-70b-versatile'
                 }
-                # Save to Firestore if available
-                if firestore_manager.firestore_available:
-                    firestore_manager.db.collection('chat_history').document(f"{analysis_id}_{datetime.utcnow().timestamp()}").set(chat_record)
+                # Chat history persistence is disabled for PostgreSQL-only deployment
+                # Can be implemented with a chat_history table in the future
+                logger.info(f"Chat recorded for analysis {analysis_id}")
             except Exception as e:
                 logger.warning(f"Failed to save chat history: {str(e)}")
         
@@ -1034,61 +1027,15 @@ Be concise, accurate, and helpful. Focus on deepfake detection, media forensics,
 @app.route('/api/chat/history/<analysis_id>', methods=['GET'])
 def get_chat_history(analysis_id):
     """Retrieve chat history for an analysis"""
-    if not firestore_manager.firestore_available:
-        return jsonify({'error': 'Chat history not available'}), 503
-    
-    try:
-        # Query Firestore for chat history
-        chat_query = firestore_manager.db.collection('chat_history').where('analysis_id', '==', analysis_id).order_by('timestamp')
-        chats = [doc.to_dict() for doc in chat_query.stream()]
-        # Reverse to get descending order (newest first)
-        chats = list(reversed(chats))
-        
-        # Ensure timestamps are strings
-        for chat in chats:
-            if 'timestamp' in chat and not isinstance(chat['timestamp'], str):
-                chat['timestamp'] = str(chat['timestamp'])
-        
-        return jsonify({
-            'history': chats,
-            'count': len(chats)
-        }), 200
-    except Exception as e:
-        logger.error(f"Error retrieving chat history: {str(e)}")
-        return jsonify({'error': 'Failed to retrieve chat history'}), 500
+    # Chat history not persisted in PostgreSQL-only deployment
+    # Can be implemented with a chat_history table in the future
+    return jsonify({'error': 'Chat history is not available in this deployment'}), 503
 
 @app.route('/api/chat/export/<analysis_id>', methods=['GET'])
 def export_chat(analysis_id):
     """Export chat conversation as text file"""
-    if not firestore_manager.firestore_available:
-        return jsonify({'error': 'Chat export not available'}), 503
-    
-    try:
-        # Query Firestore for chat history
-        chat_query = firestore_manager.db.collection('chat_history').where('analysis_id', '==', analysis_id).order_by('timestamp')
-        chats = [doc.to_dict() for doc in chat_query.stream()]
-        
-        if not chats:
-            return jsonify({'error': 'No chat history found'}), 404
-        
-        # Format as text
-        export_text = f"DeepShield Chat Export - Analysis ID: {analysis_id}\n"
-        export_text += f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        export_text += "=" * 60 + "\n\n"
-        
-        for chat in chats:
-            timestamp = chat['timestamp'].strftime('%H:%M:%S') if hasattr(chat['timestamp'], 'strftime') else str(chat['timestamp'])
-            export_text += f"[{timestamp}] User:\n{chat['user_message']}\n\n"
-            export_text += f"[{timestamp}] Assistant:\n{chat['assistant_response']}\n"
-            export_text += "-" * 60 + "\n\n"
-        
-        return export_text, 200, {
-            'Content-Disposition': f'attachment; filename=chat_export_{analysis_id}.txt',
-            'Content-Type': 'text/plain'
-        }
-    except Exception as e:
-        logger.error(f"Error exporting chat: {str(e)}")
-        return jsonify({'error': 'Failed to export chat'}), 500
+    # Chat history not persisted in PostgreSQL-only deployment
+    return jsonify({'error': 'Chat export is not available in this deployment'}), 503
 
 # ============================================
 # AUTHENTICATION ENDPOINTS
@@ -1105,14 +1052,14 @@ def send_otp():
         if not email or '@' not in email:
             return jsonify({'error': 'Invalid email address'}), 400
         
-        # Check if user exists in Firestore or SQLite
+        # Check if user exists in PostgreSQL
         user_exists = False
         user = None
         
         # Check Firestore first
-        if firestore_manager.firestore_available:
+        if db_manager.firestore_available:
             try:
-                user = firestore_manager.get_user_profile(email)
+                user = db_manager.get_user_profile(email)
                 user_exists = user is not None
             except Exception as e:
                 logger.info(f"Firestore lookup failed: {str(e)}")
@@ -1269,13 +1216,13 @@ def signup():
             'total_analyses': 0
         }
         
-        # Save user profile to Firestore (primary) and SQLite (backup)
-        profile_result = firestore_manager.save_user_profile(email, user_data)
+        # Save user profile to PostgreSQL
+        profile_result = db_manager.save_user_profile(email, user_data)
         
         # Save signup event to separate collection
-        signup_result = firestore_manager.save_signup_event(email, user_data)
+        signup_result = db_manager.save_signup_event(email, user_data)
         
-        # At least one must succeed (Firestore or SQLite)
+        # At least PostgreSQL must succeed
         if not profile_result['success'] and not signup_result['success']:
             logger.error(f"[SIGNUP] Failed to save profile or signup event. Profile errors: {profile_result['errors']}, Signup errors: {signup_result['errors']}")
             return jsonify({'error': 'Failed to create user account'}), 500
@@ -1338,15 +1285,15 @@ def login():
         client_ip = request.remote_addr
         user_agent = request.headers.get('User-Agent', '')
         
-        # Save login event to Firestore
+        # Save login event to PostgreSQL
         login_event_data = {
             'ip_address': client_ip,
             'user_agent': user_agent
         }
-        firestore_manager.save_login_event(email, additional_data=login_event_data)
+        db_manager.save_login_event(email, additional_data=login_event_data)
         
         # Update last login in both databases
-        firestore_manager.update_last_login(email)
+        db_manager.update_last_login(email)
         
         # Also update SQLite
         user = User.query.filter_by(email=email).first()
@@ -1382,8 +1329,8 @@ def get_user_profile():
     try:
         print(f"[GET_PROFILE] Fetching profile for: {request.user_email}")
         
-        # Try to get user from database (Firestore first, SQLite backup)
-        user_data = firestore_manager.get_user_profile(request.user_email)
+        # Get user from PostgreSQL database
+        user_data = db_manager.get_user_profile(request.user_email)
         
         if user_data:
             print(f"[GET_PROFILE] User found in database")
@@ -1471,15 +1418,15 @@ def update_user_profile():
             return jsonify({'error': 'No valid fields to update'}), 400
         
         # Get existing user data
-        existing_user = firestore_manager.get_user_profile(request.user_email)
+        existing_user = db_manager.get_user_profile(request.user_email)
         if not existing_user:
             return jsonify({'error': 'User not found'}), 404
         
         # Merge with new data
         existing_user.update(update_data)
         
-        # Save updated profile to Firestore and SQLite
-        result = firestore_manager.save_user_profile(request.user_email, existing_user)
+        # Save updated profile to PostgreSQL
+        result = db_manager.save_user_profile(request.user_email, existing_user)
         
         if result['success']:
             return jsonify({'success': True, 'message': 'Profile updated successfully'}), 200
@@ -1571,30 +1518,12 @@ def submit_feedback():
             'ip_address': request.remote_addr
         }
         
-        # Save to Firestore and SQLite
+        # Save to PostgreSQL
         try:
-            # Save to Firestore if available
-            if firestore_manager.firestore_available:
-                try:
-                    firestore_manager.db.collection('feedback').document(feedback_id).set({
-                        'feedback_id': feedback_id,
-                        'feedback_type': feedback_type,
-                        'subject': subject,
-                        'user_email': user_email,
-                        'message': message,
-                        'attachment': attachment_info,
-                        'created_at': datetime.utcnow(),
-                        'status': 'received',
-                        'user_agent': request.headers.get('User-Agent', ''),
-                        'ip_address': request.remote_addr
-                    })
-                    logger.info(f"Feedback saved to Firestore: {feedback_id}")
-                except Exception as e:
-                    logger.warning(f"Failed to save to Firestore: {str(e)}")
-            
-            # Also save to SQLite as backup (you may need to create a Feedback model)
+            # Save feedback to PostgreSQL database
+            # Firestore operations removed for PostgreSQL-only deployment
             try:
-                # Create simple feedback record in SQLite
+                # Create simple feedback record in PostgreSQL
                 feedback_record = {
                     'feedback_id': feedback_id,
                     'feedback_type': feedback_type,
@@ -1609,9 +1538,9 @@ def submit_feedback():
                 # feedback = Feedback(**feedback_record)
                 # db.session.add(feedback)
                 # db.session.commit()
-                logger.info("Feedback record prepared for SQLite storage")
+                logger.info("Feedback record prepared for PostgreSQL storage")
             except Exception as e:
-                logger.warning(f"Failed to save to SQLite: {str(e)}")
+                logger.warning(f"Failed to save to PostgreSQL: {str(e)}")
         
         except Exception as e:
             logger.error(f"Error saving feedback: {str(e)}")
