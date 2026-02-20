@@ -6,6 +6,7 @@
     <title>User Profile - DeepShield</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="animations.css">
+    <script src="config.js"></script>
     <script>
         // Check if user is authenticated
         const authToken = localStorage.getItem('authToken');
@@ -591,7 +592,7 @@
                 const userEmail = localStorage.getItem('userEmail');
                 console.log('Loading profile - Token:', token ? 'exists' : 'missing', 'Email:', userEmail);
                 
-                const response = await fetch('http://localhost:5000/api/auth/user', {
+                const response = await fetch(getApiUrl('/api/auth/user'), {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -747,7 +748,7 @@
         async function saveProfileChanges(data, button) {
             try {
                 const token = localStorage.getItem('authToken');
-                const response = await fetch('http://localhost:5000/api/auth/update-profile', {
+                const response = await fetch(getApiUrl('/api/auth/update-profile'), {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
