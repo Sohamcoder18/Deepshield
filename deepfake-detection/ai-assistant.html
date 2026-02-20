@@ -6,6 +6,7 @@
     <title>AI Assistant - DeepShield</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="animations.css">
+    <script src="config.js"></script>
     <script>
         // Check if user is authenticated
         const authToken = localStorage.getItem('authToken');
@@ -507,7 +508,7 @@
             showTypingIndicator();
 
             try {
-                const response = await fetch('http://localhost:5000/api/chat', {
+                const response = await fetch(getApiUrl('/api/chat'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -598,7 +599,7 @@
         async function loadChatHistory() {
             if (currentAnalysisId) {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/chat/history/${currentAnalysisId}`);
+                    const response = await fetch(getApiUrl(`/api/chat/history/${currentAnalysisId}`));
                     if (response.ok) {
                         const data = await response.json();
                         if (data.history && data.history.length > 0) {
