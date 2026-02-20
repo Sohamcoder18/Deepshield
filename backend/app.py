@@ -279,14 +279,30 @@ def allowed_file(filename, file_type):
 
 @app.route('/', methods=['GET'])
 def root():
-    """Root endpoint - API welcome page"""
-    return jsonify({
-        'name': 'Deepshield - Deepfake Detection API',
-        'description': 'Backend API running on Vercel. Use the API endpoints to detect deepfakes.',
-        'documentation': '/api-docs',
-        'health_check': '/api/health',
-        'status': 'operational'
-    })
+    """Root endpoint - serves index.html or API info"""
+    # Check if requesting HTML (from browser) or JSON (from API client)
+    if 'text/html' in request.headers.get('Accept', ''):
+        # Serve frontend index.html for browser requests
+        try:
+            return send_from_directory(static_folder_path, 'index.html')
+        except FileNotFoundError:
+            # Fallback to API info if index.html not found
+            return jsonify({
+                'name': 'Deepshield - Deepfake Detection API',
+                'description': 'Backend API running on Vercel. Use the API endpoints to detect deepfakes.',
+                'documentation': '/api-docs',
+                'health_check': '/api/health',
+                'status': 'operational'
+            })
+    else:
+        # API response for non-browser requests
+        return jsonify({
+            'name': 'Deepshield - Deepfake Detection API',
+            'description': 'Backend API running on Vercel. Use the API endpoints to detect deepfakes.',
+            'documentation': '/api-docs',
+            'health_check': '/api/health',
+            'status': 'operational'
+        })
 
 # ============================================
 # HEALTH CHECK ENDPOINTS
