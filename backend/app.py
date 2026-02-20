@@ -1,6 +1,6 @@
 import os
 import sys
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
@@ -15,7 +15,7 @@ import jwt
 import json
 import re
 from functools import wraps
-from google.cloud import firestore
+import uuid
 
 # Configure logging first
 logger = logging.getLogger(__name__)
@@ -27,8 +27,6 @@ from models.audio_detector import AudioDetector
 from models.fusion_logic import FusionLogic
 from utils.validators import validate_image, validate_video, validate_audio
 from utils.helpers import generate_response, get_file_info
-from utils.firestore_utils import FirestoreManager
-import uuid
 
 # Import deepfake detection modules
 try:
@@ -58,12 +56,14 @@ except Exception as e:
 # Load environment variables
 load_dotenv()
 
-# Configuration
-app = Flask(__name__)
+# Configuration - Use absolute path for static folder
+static_folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../deepfake-detection'))
+app = Flask(__name__, static_folder=static_folder_path, static_url_path='')
 CORS(app)
 
-# SQLite Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///deepfake_detection.db'
+# PostgreSQL Configuration (Load from environment variable or use default)
+database_url = os.getenv('SQLALCHEMY_DATABASE_URI', 'postgresql://user:password@localhost:5432/deepfake_db')
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Flask-SQLAlchemy
@@ -102,9 +102,10 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
-# Initialize Firestore Manager
-firebase_credentials_path = os.getenv('FIREBASE_CREDENTIALS_PATH', 'database_info.json')
-firestore_manager = FirestoreManager(credentials_path=firebase_credentials_path, sqlite_db=db)
+# Initialize PostgreSQL Manager (replaces Firestore)
+from utils.postgresql_manager import PostgreSQLManager
+models_dict = {'User': User}
+firestore_manager = PostgreSQLManager(db=db, models=models_dict)
 
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
@@ -1715,6 +1716,18 @@ def submit_feedback():
     except Exception as e:
         logger.error(f"Error in submit_feedback: {str(e)}")
         return jsonify({'error': f'Failed to submit feedback: {str(e)}'}), 500
+
+# ============================================
+# STATIC FILES SERVING
+# ============================================
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static files from deepfake-detection folder"""
+    try:
+        return send_from_directory(static_folder_path, filename)
+    except FileNotFoundError:
+        return jsonify({'error': 'File not found'}), 404
 
 @app.errorhandler(404)
 def not_found(error):
