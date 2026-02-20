@@ -278,7 +278,7 @@ function analyzeImage() {
         formData.append('userEmail', userEmail);
     }
     
-    fetch('http://localhost:5000/api/analyze/image', {
+    fetch(getApiUrl('/api/analyze/image'), {
         method: 'POST',
         body: formData
     })
@@ -320,7 +320,7 @@ function analyzeVideo() {
         formData.append('userEmail', userEmail);
     }
     
-    fetch('http://localhost:5000/api/analyze/video', {
+    fetch(getApiUrl('/api/analyze/video'), {
         method: 'POST',
         body: formData
     })
@@ -360,7 +360,7 @@ function analyzeAudio() {
         formData.append('userEmail', userEmail);
     }
     
-    fetch('http://localhost:5000/api/analyze/audio', {
+    fetch(getApiUrl('/api/analyze/audio'), {
         method: 'POST',
         body: formData
     })
@@ -1891,7 +1891,7 @@ async function submitFeedback(event) {
         console.log('📤 Sending feedback to backend...');
         
         // Submit to backend
-        const response = await fetch('http://localhost:5000/api/feedback/submit', {
+        const response = await fetch(getApiUrl('/api/feedback/submit'), {
             method: 'POST',
             body: formData,
             headers: {
