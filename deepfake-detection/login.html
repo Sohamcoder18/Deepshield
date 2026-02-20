@@ -6,6 +6,7 @@
     <title>Sign In - DeepShield</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="animations.css">
+    <script src="config.js"></script>
     <style>
         .auth-container {
             min-height: 100vh;
@@ -504,7 +505,7 @@
             submitBtn.innerHTML = '<span class="loading-spinner"></span> Sending OTP...';
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/send-otp', {
+                const response = await fetch(getApiUrl('/api/auth/send-otp'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -574,7 +575,7 @@
             verifyBtn.innerHTML = '<span class="loading-spinner"></span> Verifying...';
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/verify-otp', {
+                const response = await fetch(getApiUrl('/api/auth/verify-otp'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -627,7 +628,7 @@
             resendBtn.textContent = 'Sending...';
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/send-otp', {
+                const response = await fetch(getApiUrl('/api/auth/send-otp'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
