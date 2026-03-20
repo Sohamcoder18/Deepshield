@@ -33,7 +33,13 @@ class MultiModelDeepfakeDetectionService:
         self.available_models = {
             "siglip": {
                 "model_name": "prithivMLmods/deepfake-detector-model-v1",
-                "weight": 1.0,  # 100% - Only reliable model for images
+                "weight": 0.0,  # Disabled
+                "type": "image",
+                "enabled": False
+            },
+            "ai_detector": {
+                "model_name": "umm-maybe/AI-image-detector",
+                "weight": 1.0,
                 "type": "image",
                 "enabled": True
             },
@@ -77,6 +83,8 @@ class MultiModelDeepfakeDetectionService:
                     self._load_siglip_model(model_id, config)
                 elif model_id == "deepfake_v2":
                     self._load_deepfake_v2_model(model_id, config)
+                elif model_id == "ai_detector":
+                    self._load_vit_model(model_id, config)
                 elif model_id == "video_classifier":
                     self._load_video_classifier(model_id, config)
                 elif model_id == "audio_classifier":
@@ -431,6 +439,8 @@ class MultiModelDeepfakeDetectionService:
                     prediction = self._predict_siglip(image, model, processor)
                 elif model_id == "deepfake_v2":
                     prediction = self._predict_deepfake_v2(image, model, processor)
+                elif model_id == "ai_detector":
+                    prediction = self._predict_vit(image, model, processor)
                 else:
                     prediction = None
                 

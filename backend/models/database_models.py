@@ -18,11 +18,21 @@ AnalysisResult = None
 def initialize_models(flask_db):
     """Initialize models with Flask-SQLAlchemy instance"""
     global db, User, SignupHistory, LoginHistory, AnalysisResult
+    
+    if User is not None:
+        return {
+            'User': User,
+            'SignupHistory': SignupHistory,
+            'LoginHistory': LoginHistory,
+            'AnalysisResult': AnalysisResult
+        }
+        
     db = flask_db
     
     class UserModel(db.Model):
         """SQLite model for storing user profile information"""
         __tablename__ = 'users'
+        __table_args__ = {'extend_existing': True}
         
         id = Column(Integer, primary_key=True)
         email = Column(String(120), unique=True, nullable=False, index=True)
@@ -54,6 +64,7 @@ def initialize_models(flask_db):
     class SignupHistoryModel(db.Model):
         """SQLite model for tracking signup events (Firestore backup)"""
         __tablename__ = 'signup_history'
+        __table_args__ = {'extend_existing': True}
         
         id = Column(Integer, primary_key=True)
         email = Column(String(120), nullable=False, index=True)
@@ -83,6 +94,7 @@ def initialize_models(flask_db):
     class LoginHistoryModel(db.Model):
         """SQLite model for tracking login events (Firestore backup)"""
         __tablename__ = 'login_history'
+        __table_args__ = {'extend_existing': True}
         
         id = Column(Integer, primary_key=True)
         email = Column(String(120), nullable=False, index=True)
@@ -106,6 +118,7 @@ def initialize_models(flask_db):
     class AnalysisResultModel(db.Model):
         """SQLite model for storing analysis results (Firestore backup)"""
         __tablename__ = 'analysis_results'
+        __table_args__ = {'extend_existing': True}
         
         id = Column(Integer, primary_key=True)
         analysis_id = Column(String(100), unique=True, nullable=False, index=True)

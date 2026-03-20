@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL & QR Scanner - DeepShield</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
+    <script src="config.js"></script>
+    <script>
+        const authToken = localStorage.getItem('authToken');
+        const userEmail = localStorage.getItem('userEmail');
+        if (!authToken || !userEmail) window.location.href = 'login.html';
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">DeepShield</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="image-detection.html">Image Detection</a></li>
+                <li><a href="video-detection.html">Video Detection</a></li>
+                <li><a href="audio-detection.html">Audio Detection</a></li>
+                <li><a href="scanner.html" class="active">URL & QR Scanner</a></li>
+                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container main-content">
+        <header class="page-header">
+            <h1>URL & QR Scanner</h1>
+            <p>Analyze suspicious links and QR codes for phishing, malware, and fraudulent activity.</p>
+        </header>
+
+        <div class="scanner-grid">
+            <!-- URL Scanner Card -->
+            <div class="card scanner-card">
+                <div class="card-header">
+                    <span class="icon">🔗</span>
+                    <h2>URL Analyzer</h2>
+                </div>
+                <div class="card-body">
+                    <p>Enter a URL to check its safety and reputation.</p>
+                    <div class="input-group">
+                        <input type="text" id="urlInput" placeholder="https://example.com" class="form-control">
+                        <button id="scanUrlBtn" class="btn btn-primary">Scan URL</button>
+                    </div>
+                    <div id="urlStatus" class="status-msg"></div>
+                </div>
+            </div>
+
+            <!-- QR Scanner Card -->
+            <div class="card scanner-card">
+                <div class="card-header">
+                    <span class="icon">📱</span>
+                    <h2>QR Code Scanner</h2>
+                </div>
+                <div class="card-body">
+                    <p>Upload an image containing a QR code to extract and analyze the URL.</p>
+                    <div class="upload-zone" id="qrUploadZone">
+                        <input type="file" id="qrInput" accept="image/*" hidden>
+                        <div class="upload-content">
+                            <span class="upload-icon">📤</span>
+                            <p>Click or drag QR image here</p>
+                        </div>
+                    </div>
+                    <div id="qrStatus" class="status-msg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div class="result-header">
+                <h2>Scan Results</h2>
+                <div id="resultBadge" class="badge">Safe</div>
+            </div>
+            
+            <div class="result-container">
+                <div class="result-main">
+                    <div class="risk-score-container">
+                        <div class="risk-score-label">Risk Score</div>
+                        <div class="risk-score-value" id="riskScore">0.0</div>
+                        <div class="risk-progress-bar">
+                            <div id="riskProgress" class="risk-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="verdict-container">
+                        <h3>Verdict: <span id="verdictText">Safe</span></h3>
+                        <p id="recommendationText">This content appears safe.</p>
+                    </div>
+                </div>
+
+                <div class="result-details">
+                    <h3>Analysis Reasons</h3>
+                    <ul id="reasonsList" class="reasons-list">
+                        <!-- Reasons will be injected here -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button id="resetScanner" class="btn btn-secondary">Scan Another</button>
+                <a href="ai-assistant.html" id="askAssistant" class="btn btn-outline">Ask AI Assistant</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 DeepShield. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Scanner specific UI logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlInput = document.getElementById('urlInput');
+            const scanUrlBtn = document.getElementById('scanUrlBtn');
+            const qrInput = document.getElementById('qrInput');
+            const qrUploadZone = document.getElementById('qrUploadZone');
+            const resultsSection = document.getElementById('resultsSection');
+            const resetBtn = document.getElementById('resetScanner');
+
+            // URL Scan
+            scanUrlBtn.addEventListener('click', async () => {
+                const url = urlInput.value.trim();
+                if (!url) return showStatus('urlStatus', 'Please enter a URL', 'error');
+                
+                showStatus('urlStatus', 'Scanning...', 'info');
+                try {
+                    const response = await fetch(`${API_CONFIG.BASE_URL}/api/scan/url`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ url, userEmail })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        displayResults(data);
+                    } else {
+                        showStatus('urlStatus', data.error || 'Scan failed', 'error');
+                    }
+                } catch (err) {
+                    showStatus('urlStatus', 'Error connecting to server', 'error');
+                }
+            });
+
+            // QR Upload
+            qrUploadZone.addEventListener('click', () => qrInput.click());
+            qrInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                showStatus('qrStatus', `Uploading ${file.name}...`, 'info');
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('userEmail', userEmail);
+                
+                try {
+                    const response = await fetch(`${API_CONFIG.BASE_URL}/api/scan/qr`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}` },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        if (data.qr_detected) {
+                            displayResults(data);
+                        } else {
+                            showStatus('qrStatus', 'No QR code found in image', 'warning');
+                        }
+                    } else {
+                        showStatus('qrStatus', data.error || 'Scan failed', 'error');
+                    }
+                } catch (err) {
+                    showStatus('qrStatus', 'Error connecting to server', 'error');
+                }
+            });
+
+            resetBtn.addEventListener('click', () => {
+                resultsSection.style.display = 'none';
+                urlInput.value = '';
+                document.getElementById('urlStatus').innerHTML = '';
+                document.getElementById('qrStatus').innerHTML = '';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            function displayResults(data) {
+                resultsSection.style.display = 'block';
+                document.getElementById('riskScore').textContent = data.risk_score.toFixed(2);
+                document.getElementById('riskProgress').style.width = `${data.risk_score * 100}%`;
+                document.getElementById('verdictText').textContent = data.verdict;
+                document.getElementById('recommendationText').textContent = data.recommendation;
+                
+                const badge = document.getElementById('resultBadge');
+                badge.textContent = data.verdict.toUpperCase();
+                badge.className = `badge badge-${data.verdict}`;
+                
+                const list = document.getElementById('reasonsList');
+                list.innerHTML = '';
+                data.reasons.forEach(reason => {
+                    const li = document.createElement('li');
+                    li.textContent = reason;
+                    list.appendChild(li);
+                });
+                
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+                
+                // Store analysis_id for session (simulated)
+                localStorage.setItem('lastAnalysisId', `scan_${Date.now()}`);
+            }
+
+            function showStatus(id, msg, type) {
+                const el = document.getElementById(id);
+                el.textContent = msg;
+                el.className = `status-msg ${type}`;
+            }
+        });
+    </script>
+</body>
+</html>

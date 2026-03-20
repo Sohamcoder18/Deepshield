@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback & Suggestions - DeepShield</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
+    <script src="config.js"></script>
+    <script>
+        // Check if user is authenticated
+        const authToken = localStorage.getItem('authToken');
+        const userEmail = localStorage.getItem('userEmail');
+        
+        if (!authToken || !userEmail) {
+            // Redirect to login page if not authenticated
+            window.location.href = 'login.html';
+        }
+    </script></head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">DeepShield</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="image-detection.html">Image Detection</a></li>
+                <li><a href="video-detection.html">Video Detection</a></li>
+                <li><a href="audio-detection.html">Audio Detection</a></li>
+                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="feedback.html" class="active">Feedback</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Feedback Container -->
+    <div class="detection-container">
+        <div class="detection-header">
+            <h1>Share Your Feedback</h1>
+            <p>Help us improve DeepShield by sharing your thoughts, suggestions, and bug reports</p>
+        </div>
+
+        <!-- Feedback Form Card -->
+        <div class="feedback-card">
+            <form id="feedbackForm" onsubmit="submitFeedback(event)">
+                <!-- Feedback Type -->
+                <div class="form-group">
+                    <label for="feedbackType">Feedback Type *</label>
+                    <select id="feedbackType" required class="form-control">
+                        <option value="">Select a type...</option>
+                        <option value="bug_report">Bug Report</option>
+                        <option value="feature_request">Feature Request</option>
+                        <option value="improvement">Improvement Suggestion</option>
+                        <option value="general">General Feedback</option>
+                        <option value="complaint">Complaint</option>
+                        <option value="praise">Praise</option>
+                    </select>
+                </div>
+
+                <!-- User Email (Display Only - From Session) -->
+                <div class="form-group">
+                    <label for="userEmail">Your Email</label>
+                    <div id="userEmailDisplay" class="form-control" style="
+                        background: rgba(0, 212, 255, 0.08);
+                        border: 1px solid rgba(0, 212, 255, 0.3);
+                        display: flex;
+                        align-items: center;
+                        color: #00d4ff;
+                        font-weight: 500;
+                    ">
+                        📧 <span id="userEmailText" style="margin-left: 10px;">Loading...</span>
+                    </div>
+                    <small style="color: #888; display: block; margin-top: 8px;">Using your logged-in email address</small>
+                    <input type="hidden" id="userEmail">
+                </div>
+
+                <!-- Subject -->
+                <div class="form-group">
+                    <label for="subject">Subject *</label>
+                    <input 
+                        type="text" 
+                        id="subject" 
+                        required 
+                        class="form-control" 
+                        placeholder="Brief subject of your feedback"
+                        maxlength="100"
+                    >
+                </div>
+
+                <!-- Message -->
+                <div class="form-group">
+                    <label for="message">Message *</label>
+                    <textarea 
+                        id="message" 
+                        required 
+                        class="form-control feedback-textarea" 
+                        placeholder="Please provide detailed feedback here..."
+                        rows="8"
+                        maxlength="2000"
+                    ></textarea>
+                    <small id="charCount" class="char-count">0 / 2000 characters</small>
+                </div>
+
+                <!-- File Upload (Optional) -->
+                <div class="form-group">
+                    <label for="attachment">Attachment (Optional)</label>
+                    <div class="upload-area feedback-upload-area">
+                        <div class="upload-icon">📎</div>
+                        <h4>Attach a file (if needed)</h4>
+                        <p>Screenshots, documents, etc.</p>
+                        <input type="file" id="attachment" hidden accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt">
+                    </div>
+                    <div class="file-info" id="fileInfo" style="display: none;">
+                        <p id="fileName"></p>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="clearFile()">Change File</button>
+                    </div>
+                </div>
+
+                <!-- Checkbox for email copy -->
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="sendCopy" checked>
+                        <span>Send me a copy of this feedback</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-large">
+                        <span class="btn-text">Submit Feedback</span>
+                        <span class="btn-icon">✉️</span>
+                    </button>
+                </div>
+
+                <!-- Disclaimer -->
+                <p class="form-disclaimer">
+                    Your feedback is important to us. We read all submissions and use them to improve DeepShield.
+                </p>
+            </form>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="alert alert-success" style="display: none;">
+                <h4>✅ Thank You!</h4>
+                <p>Your feedback has been submitted successfully. We appreciate your input!</p>
+                <button type="button" class="btn btn-secondary btn-small" onclick="resetForm()">Submit Another Feedback</button>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="alert alert-error" style="display: none;">
+                <h4>❌ Submission Failed</h4>
+                <p id="errorText"></p>
+                <button type="button" class="btn btn-secondary btn-small" onclick="hideErrorMessage()">Try Again</button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Submitting your feedback...</p>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <section class="info-section">
+            <h2>Why We Value Your Feedback</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-icon">🔍</div>
+                    <h3>Bug Detection</h3>
+                    <p>Help us identify and fix issues you encounter while using DeepShield</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">✨</div>
+                    <h3>Feature Development</h3>
+                    <p>Share your ideas for new features that would make detection better</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">📈</div>
+                    <h3>Continuous Improvement</h3>
+                    <p>Your suggestions help us enhance accuracy and user experience</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">👥</div>
+                    <h3>Community Growth</h3>
+                    <p>Be part of our community and shape the future of deepfake detection</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

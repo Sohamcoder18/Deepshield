@@ -76,9 +76,24 @@
                             ></textarea>
                             <button id="sendBtn" class="btn btn-primary" onclick="sendMessage()">Send</button>
                         </div>
+                        
+                        <!-- Voice Control Buttons -->
+                        <div class="ai-voice-controls">
+                            <button id="voiceRecordBtn" class="btn btn-voice" title="Record voice message" onclick="toggleVoiceRecord()" style="display: none;">
+                                <span class="voice-icon">🎤</span>
+                                <span class="voice-text">Record</span>
+                            </button>
+                            <button id="voiceChatBtn" class="btn btn-voice" title="Send voice and get voice response" onclick="toggleVoiceChat()" style="display: none;">
+                                <span class="voice-icon">🗣️</span>
+                                <span class="voice-text">Voice Chat</span>
+                            </button>
+                            <span id="voiceStatus" class="voice-status"></span>
+                        </div>
+                        
                         <div class="ai-action-buttons">
                             <button class="btn btn-secondary" onclick="clearChat()">Clear Chat</button>
                             <button class="btn btn-secondary" onclick="exportChat()">📥 Export</button>
+                            <button class="btn btn-secondary" id="voiceStatusBtn" onclick="checkVoiceFeatures()" style="display: none;">🎤 Voice Features</button>
                         </div>
                     </div>
                 </div>
@@ -372,6 +387,143 @@
                 width: 100%;
             }
         }
+
+        /* ========== VOICE ASSISTANT STYLES ========== */
+        .ai-voice-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-voice {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 1px solid rgba(102, 126, 234, 0.5);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-voice:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-voice.recording {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: rgba(245, 87, 108, 0.5);
+            animation: pulse-recording 1.5s ease-in-out infinite;
+        }
+
+        .btn-voice.active {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            border-color: rgba(250, 112, 154, 0.5);
+            animation: pulse-active 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse-recording {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(245, 87, 108, 0);
+            }
+        }
+
+        @keyframes pulse-active {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(250, 112, 154, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(250, 112, 154, 0);
+            }
+        }
+
+        .voice-icon {
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .voice-text {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .voice-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--secondary-color);
+            min-height: 20px;
+            min-width: 100px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .voice-status.recording {
+            background: rgba(245, 87, 108, 0.2);
+            color: #f5576c;
+            animation: status-pulse 1.5s ease-in-out infinite;
+        }
+
+        .voice-status.processing {
+            background: rgba(250, 112, 154, 0.2);
+            color: #fa709a;
+        }
+
+        .voice-status.success {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--secondary-color);
+        }
+
+        .voice-status.error {
+            background: rgba(255, 51, 51, 0.2);
+            color: #ff3333;
+        }
+
+        .voice-status.ready {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--secondary-color);
+        }
+
+        @keyframes status-pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .ai-voice-controls {
+                flex-direction: column;
+            }
+
+            .btn-voice {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .voice-status {
+                width: 100%;
+            }
+        }
     </style>
 
     <script>
@@ -403,8 +555,11 @@
         });
 
         function addMessage(content, isUser = false) {
+            console.log('📝 addMessage called with:', { content: content.substring(0, 50), isUser, contentLength: content.length });
+            
             const messageDiv = document.createElement('div');
             messageDiv.className = `ai-message ${isUser ? 'user-msg' : 'assistant-msg'}`;
+            console.log('📝 Created messageDiv with class:', messageDiv.className);
             
             const contentDiv = document.createElement('div');
             contentDiv.className = 'ai-msg-content';
@@ -417,8 +572,11 @@
             }
             
             messageDiv.appendChild(contentDiv);
+            console.log('📝 Appending message to chatContainer...');
+            console.log('📝 chatContainer element:', chatContainer);
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+            console.log('📝 Message appended successfully');
 
             if (!isUser) {
                 conversationHistory.push({
@@ -431,6 +589,7 @@
                     content: content
                 });
             }
+            console.log('📝 Updated conversation history, now has', conversationHistory.length, 'messages');
         }
 
         function formatResponse(text) {
@@ -619,7 +778,210 @@
 
         // Load chat history on page load
         window.addEventListener('load', loadChatHistory);
+
+        // ========== VOICE ASSISTANT FUNCTIONS ==========
+        let voiceAssistant = null;
+        let isVoiceRecording = false;
+        let isVoiceChat = false;
+
+        /**
+         * Initialize voice assistant
+         */
+        async function initializeVoiceAssistant() {
+            voiceAssistant = new VoiceAssistant(getApiUrl(''));
+            
+            // Set up callbacks
+            voiceAssistant.onRecordingStart = () => {
+                updateVoiceStatus('Recording...', 'recording');
+            };
+            
+            voiceAssistant.onRecordingStop = () => {
+                updateVoiceStatus('Processing...', 'processing');
+            };
+            
+            voiceAssistant.onTranscriptionComplete = (text) => {
+                messageInput.value = text;
+                updateVoiceStatus('Transcribed', 'success');
+            };
+            
+            voiceAssistant.onSpeechStart = () => {
+                updateVoiceStatus('Playing response...', 'processing');
+            };
+            
+            voiceAssistant.onSpeechComplete = () => {
+                updateVoiceStatus('Ready', 'ready');
+            };
+            
+            voiceAssistant.onError = (error) => {
+                console.error('Voice error:', error);
+                updateVoiceStatus('❌ ' + error, 'error');
+                alert('Voice Error: ' + error);
+            };
+
+            // Check voice availability
+            await checkVoiceFeatures();
+        }
+
+        /**
+         * Check and display voice features availability
+         */
+        async function checkVoiceFeatures() {
+            if (!voiceAssistant) return;
+
+            try {
+                const status = await voiceAssistant.checkVoiceAvailability();
+                const recordBtn = document.getElementById('voiceRecordBtn');
+                const chatBtn = document.getElementById('voiceChatBtn');
+                const statusBtn = document.getElementById('voiceStatusBtn');
+
+                if (status.voice_available && status.groq_available) {
+                    recordBtn.style.display = 'inline-block';
+                    chatBtn.style.display = 'inline-block';
+                    statusBtn.style.display = 'inline-block';
+                    updateVoiceStatus('✓ Voice Ready', 'ready');
+                } else {
+                    updateVoiceStatus('⚠ Voice unavailable', 'error');
+                    if (!status.voice_available) {
+                        console.warn('Voice features not available');
+                    }
+                    if (!status.groq_available) {
+                        console.warn('Groq AI not available');
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking voice features:', error);
+                updateVoiceStatus('❌ Check failed', 'error');
+            }
+        }
+
+        /**
+         * Toggle voice recording
+         */
+        async function toggleVoiceRecord() {
+            if (!voiceAssistant) return;
+
+            try {
+                if (!isVoiceRecording) {
+                    // Start recording
+                    await voiceAssistant.startRecording();
+                    isVoiceRecording = true;
+                    document.getElementById('voiceRecordBtn').classList.add('recording');
+                    document.getElementById('voiceRecordBtn').querySelector('.voice-text').textContent = 'Stop';
+                } else {
+                    // Stop recording and transcribe
+                    const audioBlob = await voiceAssistant.stopRecording();
+                    isVoiceRecording = false;
+                    document.getElementById('voiceRecordBtn').classList.remove('recording');
+                    document.getElementById('voiceRecordBtn').querySelector('.voice-text').textContent = 'Record';
+
+                    if (audioBlob) {
+                        updateVoiceStatus('Transcribing...', 'processing');
+                        await voiceAssistant.transcribeAudio(audioBlob, 'en-US');
+                    }
+                }
+            } catch (error) {
+                console.error('Recording error:', error);
+                isVoiceRecording = false;
+                document.getElementById('voiceRecordBtn').classList.remove('recording');
+                document.getElementById('voiceRecordBtn').querySelector('.voice-text').textContent = 'Record';
+                updateVoiceStatus('❌ Recording failed', 'error');
+            }
+        }
+
+        /**
+         * Toggle voice chat (record & get voice response)
+         */
+        async function toggleVoiceChat() {
+            if (!voiceAssistant) return;
+
+            try {
+                if (!isVoiceChat) {
+                    // Start voice chat
+                    isVoiceChat = true;
+                    document.getElementById('voiceChatBtn').classList.add('active');
+                    document.getElementById('voiceChatBtn').querySelector('.voice-text').textContent = 'Stop Chat';
+                    updateVoiceStatus('🎤 Listening...', 'recording');
+
+                    await voiceAssistant.startRecording();
+                } else {
+                    // End recording and process voice chat
+                    isVoiceChat = false;
+                    document.getElementById('voiceChatBtn').classList.remove('active');
+                    document.getElementById('voiceChatBtn').querySelector('.voice-text').textContent = 'Voice Chat';
+
+                    const audioBlob = await voiceAssistant.stopRecording();
+
+                    if (audioBlob) {
+                        updateVoiceStatus('Processing...', 'processing');
+                        try {
+                            console.log('🎯 Starting voice chat request...');
+                            const voiceChatResponse = await voiceAssistant.voiceChat(
+                                audioBlob,
+                                'en-US',
+                                'wav',
+                                currentAnalysisId
+                            );
+                            
+                            console.log('🎯 Voice chat response received:', voiceChatResponse);
+                            console.log('🎯 Response type:', typeof voiceChatResponse);
+                            console.log('🎯 Response keys:', voiceChatResponse ? Object.keys(voiceChatResponse) : 'null');
+                            console.log('🎯 user_text:', voiceChatResponse?.user_text);
+                            console.log('🎯 assistant_text:', voiceChatResponse?.assistant_text);
+                            
+                            // Add messages to chat from the response data
+                            if (voiceChatResponse && voiceChatResponse.user_text && voiceChatResponse.assistant_text) {
+                                console.log('✅ Adding user message to chat...');
+                                addMessage(voiceChatResponse.user_text, true);
+                                console.log('✅ User message added');
+                                console.log('✅ Adding assistant message to chat...');
+                                addMessage(voiceChatResponse.assistant_text, false);
+                                console.log('✅ Assistant message added');
+                                console.log('✅ Updating status...');
+                                updateVoiceStatus('✓ Voice response received', 'ready');
+                                console.log('✅ Status updated');
+                            } else {
+                                console.error('❌ Voice response missing text fields:', voiceChatResponse);
+                                const missingFields = [];
+                                if (!voiceChatResponse) missingFields.push('response is null/undefined');
+                                if (!voiceChatResponse?.user_text) missingFields.push('user_text');
+                                if (!voiceChatResponse?.assistant_text) missingFields.push('assistant_text');
+                                updateVoiceStatus('❌ Missing: ' + missingFields.join(', '), 'error');
+                            }
+                        } catch (voiceError) {
+                            console.error('❌ Voice chat processing error:', voiceError);
+                            console.error('❌ Error stack:', voiceError.stack);
+                            updateVoiceStatus('❌ Error: ' + voiceError.message, 'error');
+                            throw voiceError;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Voice chat error:', error);
+                isVoiceChat = false;
+                document.getElementById('voiceChatBtn').classList.remove('active');
+                document.getElementById('voiceChatBtn').querySelector('.voice-text').textContent = 'Voice Chat';
+                updateVoiceStatus('❌ Voice chat error: ' + error.message, 'error');
+                alert('Voice chat error: ' + error.message);
+            }
+        }
+
+        /**
+         * Update voice status display
+         */
+        function updateVoiceStatus(message, status = 'default') {
+            const statusEl = document.getElementById('voiceStatus');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.className = 'voice-status ' + status;
+            }
+        }
+
+        // Initialize voice assistant when page loads
+        window.addEventListener('load', () => {
+            initializeVoiceAssistant();
+        });
     </script>
+    <script src="voice-assistant.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
