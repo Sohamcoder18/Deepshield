@@ -1,6 +1,7 @@
 {
+  "version": 2,
   "buildCommand": "pip install -r requirements.txt",
-  "framework": null,
+  "framework": "python",
   "python": {
     "version": "3.11"
   },
