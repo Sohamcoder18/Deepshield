@@ -28,7 +28,6 @@ huggingface-hub>=0.16.0
 SpeechRecognition>=3.10.0
 pyttsx3>=2.90
 pydub>=0.25.1
-PyAudio>=0.2.13
 
 tldextract>=5.1.0
 python-whois>=0.8.0
