@@ -4,8 +4,8 @@
   "framework": "python",
   "functions": {
     "wsgi.py": {
-      "maxDuration": 900,
-      "memory": 3008,
+      "maxDuration": 300,
+      "memory": 1024,
       "runtime": "python3.11"
     }
   },
