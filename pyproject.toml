@@ -1,5 +1,0 @@
-[project]
-name = "deepshield"
-version = "1.0.0"
-description = "Deepfake detection system"
-requires-python = ">=3.9"
