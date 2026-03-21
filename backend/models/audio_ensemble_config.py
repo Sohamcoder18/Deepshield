@@ -1,6 +1,6 @@
 """
 Audio Ensemble Configuration Guide
-Enables using both BiGRU+Attention and Pretrained models together
+Enables using BiGRU+Attention, Pretrained wav2vec2, and new Wav2Vec2AudioDetector models together
 """
 
 import os
@@ -19,16 +19,31 @@ DEFAULT_PRETRAINED_MODEL = os.path.join(
     'checkpoints/audio_pretrained_wav2vec2_checkpoint.pt'
 )
 
+# New Wav2Vec2 Audio Detector (downloads from HuggingFace on first use)
+DEFAULT_WAV2VEC2_MODEL = "facebook/wav2vec2-base"
+
 # Ensemble configuration
 ENSEMBLE_CONFIG = {
-    # Use ensemble voting when both models available
+    # Use ensemble voting when multiple models available
     'use_ensemble': True,
+    
+    # Enable individual models
+    'enable_bigruattention': True,
+    'enable_pretrained_wav2vec2': True,
+    'enable_wav2vec2_audio_detector': True,  # NEW: Wav2Vec2 direct model
     
     # Weighting strategy:
     # 'confidence': Weight by prediction confidence (recommended)
-    # 'equal': Give equal weight to both models
-    # 'priority': Prioritize one model over the other
+    # 'equal': Give equal weight to all models
+    # 'priority': Prioritize one model over others
     'weighting_strategy': 'confidence',
+    
+    # Model weights in ensemble (sum should = 1.0)
+    'model_weights': {
+        'bigruattention': 0.33,
+        'pretrained_wav2vec2': 0.33,
+        'wav2vec2_audio_detector': 0.34  # NEW: Gets highest weight for best results
+    },
     
     # Confidence threshold for binary classification
     'confidence_threshold': 0.5,
@@ -58,16 +73,25 @@ def check_model_availability():
             'available': os.path.exists(DEFAULT_PRETRAINED_MODEL),
             'path': DEFAULT_PRETRAINED_MODEL
         },
+        'wav2vec2_audio_detector': {
+            'available': True,  # Always available (downloads from HF)
+            'model_name': DEFAULT_WAV2VEC2_MODEL,
+            'note': 'Downloads from HuggingFace on first use (~360MB)'
+        },
         'ensemble_available': False
     }
     
-    # Ensemble available only if both models exist
-    status['ensemble_available'] = (
-        status['bigruattention']['available'] and 
-        status['pretrained']['available']
-    )
+    # Ensemble available if at least 2 models exist
+    available_models = sum([
+        status['bigruattention']['available'],
+        status['pretrained']['available'],
+        status['wav2vec2_audio_detector']['available']
+    ])
     
-    logger.info(f"Model Status: {status}")
+    status['ensemble_available'] = available_models >= 2
+    status['num_available_models'] = available_models
+    
+    logger.info(f"Model Status: {available_models} models available")
     return status
 
 

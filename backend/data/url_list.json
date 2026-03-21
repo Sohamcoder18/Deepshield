@@ -1,0 +1,29 @@
+{
+  "blocklist": [
+    "malicious-domain.xyz",
+    "phishing-site.tk",
+    "fake-bank.ml",
+    "secure-paypal-verify.xyz",
+    "confirm-amazon-login.tk",
+    "bank-verify-account.ml",
+    "upi-verify-update.icu",
+    "google-security-check.xyz",
+    "microsoft-account-verify.tk",
+    "apple-id-security.ml",
+    "facebook-login-confirm.icu",
+    "twitter-verify-now.xyz",
+    "br-icloud.com.br"
+  ],
+  "allowlist": [
+    "google.com",
+    "facebook.com",
+    "amazon.com",
+    "paypal.com",
+    "stripe.com",
+    "apple.com",
+    "microsoft.com",
+    "github.com",
+    "stackoverflow.com"
+  ],
+  "updated_at": "2024-01-01T00:00:00"
+}

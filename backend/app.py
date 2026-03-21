@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 from models.image_detector import ImageDetector
 from models.video_detector import VideoDetector
 from models.audio_detector import AudioDetector
+from models.wav2vec2_audio_detector import Wav2Vec2AudioDetector
 from models.fusion_logic import FusionLogic
 from utils.validators import validate_image, validate_video, validate_audio
 from utils.helpers import generate_response, get_file_info
@@ -269,6 +270,16 @@ try:
     logger.info("All models initialized successfully!")
 except Exception as e:
     logger.error(f"Error initializing models: {str(e)}")
+
+# Initialize Wav2Vec2 Audio Detector
+wav2vec2_detector = None
+try:
+    logger.info("[WAV2VEC2] Initializing Wav2Vec2 audio detector...")
+    wav2vec2_detector = Wav2Vec2AudioDetector()
+    logger.info("[OK] Wav2Vec2 audio detector initialized successfully!")
+except Exception as e:
+    logger.warning(f"[WARNING] Could not initialize Wav2Vec2 detector: {str(e)}")
+    wav2vec2_detector = None
 
 # Initialize Deepfake Detection Service
 if deepfake_available:
@@ -824,6 +835,106 @@ def analyze_audio():
     except Exception as e:
         logger.error(f"Error in audio analysis: {str(e)}")
         return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
+
+
+# WAV2VEC2 AUDIO DEEPFAKE DETECTION ENDPOINT
+@app.route('/api/analyze/audio/wav2vec2', methods=['POST'])
+def analyze_audio_wav2vec2():
+    """
+    Advanced audio deepfake detection using Wav2Vec2-base model
+    Expects: audio file in request.files['file']
+    Returns: Wav2Vec2 analysis with risk score, confidence, and detailed indicators
+    """
+    if wav2vec2_detector is None:
+        return jsonify({'error': 'Wav2Vec2 detector not available. Falling back to standard audio analysis.'}), 503
+    
+    try:
+        # Validate request
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        if not allowed_file(file.filename, 'audio'):
+            return jsonify({'error': 'Invalid file format. Allowed: mp3, wav, flac, aac, ogg, m4a'}), 400
+
+        # Validate audio
+        is_valid, error_msg = validate_audio(file)
+        if not is_valid:
+            return jsonify({'error': error_msg}), 400
+
+        # Save file temporarily
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        # Perform Wav2Vec2 detection
+        logger.info(f"[WAV2VEC2] Analyzing audio: {filename}")
+        results = wav2vec2_detector.analyze_audio_deepfake(filepath)
+
+        # Get file info
+        file_info = get_file_info(filepath)
+
+        # Prepare response
+        response = {
+            'status': 'success',
+            'analysis_type': 'audio',
+            'detection_model': 'wav2vec2-base',
+            'file_name': filename,
+            'file_size': file_info['size'],
+            'audio_duration': results.get('audio_duration', 0),
+            'sample_rate': results.get('sample_rate', 16000),
+            'verdict': results.get('verdict', 'unknown'),
+            'risk_score': results.get('risk_score', 0),
+            'confidence': results.get('confidence', 0),
+            'is_fake': results.get('verdict') == 'fake',
+            'features_detected': results.get('features_used', []),
+            'analysis': results.get('analysis', {}),
+            'recommendation': f"Audio appears to be {results.get('verdict')}",
+            'timestamp': datetime.now().isoformat()
+        }
+
+        # Save to databases
+        try:
+            user_email = request.form.get('userEmail', '').strip()
+            analysis_data = {
+                'analysis_type': 'audio',
+                'detection_model': 'wav2vec2',
+                'user_email': user_email,
+                'file_name': filename,
+                'file_size': file_info['size'],
+                'verdict': results.get('verdict'),
+                'risk_score': results.get('risk_score'),
+                'confidence': results.get('confidence'),
+                'audio_duration': results.get('audio_duration'),
+                'recommendation': response['recommendation']
+            }
+            
+            db_result = db_manager.save_analysis_result(analysis_data)
+            analysis_id = db_result['firestore_id']
+            response['analysis_id'] = analysis_id
+            response['database_id'] = db_result['firestore_id']
+            logger.info(f"[OK] Wav2Vec2 audio analysis saved with ID: {analysis_id}")
+            
+            # Save to user's analysis log if authenticated
+            if user_email:
+                db_manager.save_user_analysis_log(user_email, analysis_id, analysis_data)
+                send_analysis_notification(user_email, 'audio', results)
+        except Exception as e:
+            logger.warning(f"[WARNING] Could not save to database: {str(e)}")
+
+        # Clean up
+        os.remove(filepath)
+
+        return jsonify(response), 200
+
+    except Exception as e:
+        logger.error(f"[ERROR] Wav2Vec2 audio analysis failed: {str(e)}")
+        return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
+
 
 # ============================================
 # SCANNER ENDPOINTS
