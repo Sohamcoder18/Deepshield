@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: riskshield
+    env: python
+    plan: free
+    pythonVersion: 3.11
+    
+    # Install system dependencies required for building PyAudio
+    buildCommand: |
+      apt-get update && \
+      apt-get install -y portaudio19-dev && \
+      pip install --upgrade pip && \
+      pip install -r requirements.txt
+    
+    # Start the Flask application with Gunicorn
+    startCommand: "gunicorn wsgi:app --workers 4 --timeout 120"
+    
+    # Environment variables (set these in Render dashboard)
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    
+    # Auto-deploy on git push
+    autoDeploy: true
