@@ -22,12 +22,23 @@ import base64
 # Configure logging first
 logger = logging.getLogger(__name__)
 
-# Import detection modules
-from models.image_detector import ImageDetector
-from models.video_detector import VideoDetector
-from models.audio_detector import AudioDetector
-from models.wav2vec2_audio_detector import Wav2Vec2AudioDetector
-from models.fusion_logic import FusionLogic
+# Import detection modules with graceful fallback for Python 3.14+ compatibility
+try:
+    from models.image_detector import ImageDetector
+    from models.video_detector import VideoDetector
+    from models.audio_detector import AudioDetector
+    from models.wav2vec2_audio_detector import Wav2Vec2AudioDetector
+    from models.fusion_logic import FusionLogic
+    detectors_available = True
+except ImportError as e:
+    print(f"Warning: Could not import ML detectors (TensorFlow/PyTorch not available): {e}")
+    detectors_available = False
+    ImageDetector = None
+    VideoDetector = None
+    AudioDetector = None
+    Wav2Vec2AudioDetector = None
+    FusionLogic = None
+
 from utils.validators import validate_image, validate_video, validate_audio
 from utils.helpers import generate_response, get_file_info
 
@@ -346,21 +357,36 @@ def health_check():
     return jsonify({
         'status': 'ok',
         'timestamp': datetime.now().isoformat(),
-        'service': 'DeepShield Backend'
+        'service': 'RiskShield Backend',
+        'detectors_available': detectors_available
     }), 200
 
 @app.route('/api/models/status', methods=['GET'])
 def models_status():
     """Get status of all loaded models"""
-    return jsonify({
-        'status': 'ok',
-        'models': {
+    if detectors_available:
+        model_status = {
             'xceptionnet': 'loaded',
             'mtcnn': 'loaded',
             'audio_cnn': 'loaded',
             'mfcc_extractor': 'loaded'
-        },
-        'timestamp': datetime.now().isoformat()
+        }
+        status = 'ok'
+    else:
+        model_status = {
+            'xceptionnet': 'unavailable',
+            'mtcnn': 'unavailable',
+            'audio_cnn': 'unavailable',
+            'mfcc_extractor': 'unavailable'
+        }
+        status = 'degraded'
+    
+    return jsonify({
+        'status': status,
+        'detectors_available': detectors_available,
+        'models': model_status,
+        'timestamp': datetime.now().isoformat(),
+        'message': 'ML detectors not available on Python 3.14+. Use API for URL/QR scanning or upgrade Python version.' if not detectors_available else None
     }), 200
 
 # ============================================
@@ -369,6 +395,12 @@ def models_status():
 
 @app.route('/api/analyze/image', methods=['POST'])
 def analyze_image():
+    if not detectors_available:
+        return jsonify({
+            'error': 'Image detection not available',
+            'message': 'ML models not loaded. This feature requires TensorFlow/PyTorch support.',
+            'available_features': ['url_scanning', 'qr_detection']
+        }), 503
     """
     Analyze image for deepfake detection
     Expects: image file in request.files['file']
@@ -633,6 +665,12 @@ def analyze_image():
 
 @app.route('/api/analyze/video', methods=['POST'])
 def analyze_video():
+    if not detectors_available:
+        return jsonify({
+            'error': 'Video detection not available',
+            'message': 'ML models not loaded. This feature requires TensorFlow/PyTorch support.',
+            'available_features': ['url_scanning', 'qr_detection']
+        }), 503
     """
     Analyze video for deepfake detection
     Expects: video file in request.files['file'], frame_count in request.form
@@ -738,6 +776,12 @@ def analyze_video():
 
 @app.route('/api/analyze/audio', methods=['POST'])
 def analyze_audio():
+    if not detectors_available:
+        return jsonify({
+            'error': 'Audio detection not available',
+            'message': 'ML models not loaded. This feature requires TensorFlow/PyTorch support.',
+            'available_features': ['url_scanning', 'qr_detection']
+        }), 503
     """
     Analyze audio for deepfake detection
     Expects: audio file in request.files['file']
@@ -840,6 +884,12 @@ def analyze_audio():
 # WAV2VEC2 AUDIO DEEPFAKE DETECTION ENDPOINT
 @app.route('/api/analyze/audio/wav2vec2', methods=['POST'])
 def analyze_audio_wav2vec2():
+    if not detectors_available:
+        return jsonify({
+            'error': 'Wav2Vec2 audio detection not available',
+            'message': 'ML models not loaded. This feature requires TensorFlow/PyTorch support.',
+            'available_features': ['url_scanning', 'qr_detection']
+        }), 503
     """
     Advanced audio deepfake detection using Wav2Vec2-base model
     Expects: audio file in request.files['file']
@@ -1049,6 +1099,13 @@ def combine_results():
     Expects: JSON with image_score, video_score, audio_score
     Returns: fused trust score and final verdict
     """
+    if not detectors_available:
+        return jsonify({
+            'error': 'Fusion not available',
+            'message': 'ML models not loaded. This feature requires TensorFlow/PyTorch support.',
+            'available_features': ['url_scanning', 'qr_detection']
+        }), 503
+    
     try:
         data = request.get_json()
 
