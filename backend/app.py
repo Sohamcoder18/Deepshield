@@ -165,7 +165,7 @@ else:
         logger.warning("✗ GROQ_API_KEY appears to be a placeholder. AI assistant will be unavailable.")
 
 # Initialize Authentication & Email Service (Brevo)
-BREVO_API_KEY = os.getenv('BREVO_API_KEY', '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')
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
 JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-this-in-production')
 OTP_CACHE = {}  # Format: {email: {'otp': '123456', 'expires': timestamp, 'attempts': 0}}
 OTP_EXPIRY_TIME = 120  # 120 seconds

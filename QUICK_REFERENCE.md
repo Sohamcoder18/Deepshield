@@ -44,7 +44,7 @@ Open in browser:
 
 ### Brevo API Configuration
 ```
-API Key: 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
+API Key: [REDACTED - Set in .env file]
 Sender Email: noreply@deepshield.com
 Service: Email API v3
 ```
