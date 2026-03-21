@@ -2,9 +2,6 @@
   "version": 2,
   "buildCommand": "pip install -r requirements.txt",
   "framework": "python",
-  "python": {
-    "version": "3.11"
-  },
   "functions": {
     "wsgi.py": {
       "maxDuration": 900,
