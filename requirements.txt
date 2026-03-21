@@ -3,8 +3,8 @@ flask-cors>=4.0.0
 numpy>=1.24.3,<2.0
 opencv-python>=4.8.0
 librosa>=0.10.0
-tensorflow>=2.16.0
-keras>=3.0.0
+tensorflow>=2.13.0,<2.15
+keras>=2.13.0
 mtcnn==0.1.1
 Pillow>=10.0.0
 scikit-learn>=1.3.0
@@ -18,11 +18,11 @@ flask-sqlalchemy>=3.0.3
 groq>=0.4.0
 PyJWT>=2.8.0
 requests>=2.31.0
-protobuf>=4.0.0
-torch>=2.1.0
+protobuf>=3.20.3,<4.21.0
+torch>=2.0.1,<2.1
 transformers>=4.30.0
-torchvision>=0.16.0
-torchaudio>=2.1.0
+torchvision>=0.15.2
+torchaudio>=2.0.2
 huggingface-hub>=0.16.0
 
 # Voice Input/Output Libraries
