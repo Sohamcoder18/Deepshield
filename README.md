@@ -418,7 +418,7 @@ deepfake-detection/
 - **Framework**: Flask (Python web framework)
 - **ML Libraries**: TensorFlow, PyTorch, scikit-learn
 - **Audio Processing**: librosa, soundfile
-- **Databases**: MongoDB, Firebase/Firestore, PostgreSQL, SQLite
+- **Databases**:  PostgreSQL, SQLite
 - **AI Chat**: Groq API
 - **Email**: Brevo (formerly Sendinblue)
 - **Face Detection**: MTCNN
