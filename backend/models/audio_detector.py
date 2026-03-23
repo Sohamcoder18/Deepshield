@@ -3,7 +3,6 @@ import numpy as np
 import librosa
 import time
 import logging
-from keras.models import load_model
 import torch
 
 logger = logging.getLogger(__name__)
@@ -33,8 +32,13 @@ class AudioDetector:
             # Try to load actual audio model
             try:
                 if audio_model_path and os.path.exists(audio_model_path):
-                    self.audio_model = load_model(audio_model_path)
-                    logger.info(f"Audio model loaded from: {audio_model_path}")
+                    try:
+                        from keras.models import load_model
+                        self.audio_model = load_model(audio_model_path)
+                        logger.info(f"Audio model loaded from: {audio_model_path}")
+                    except ImportError:
+                        logger.warning("Keras not available for loading audio model, using ensemble instead")
+                        self.audio_model = None
                 else:
                     logger.info("Audio model path not found, will use ensemble or heuristics")
             except Exception as e:

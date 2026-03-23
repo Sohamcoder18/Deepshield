@@ -1,0 +1,488 @@
+python : 2026-03-21 
+21:18:12.909604: I ten
+sorflow/core/util/port
+.cc:113] oneDNN 
+custom operations are 
+on. You may see 
+slightly different 
+numerical results due 
+to floating-point 
+round-off errors from 
+different computation 
+orders. To turn them 
+off, set the 
+environment variable `
+TF_ENABLE_ONEDNN_OPTS=
+0`.
+At line:1 char:1
++ python test_ensemble
+_local.py > 
+ensemble_test_out.txt 
+2>&1
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (2026-03-21   
+  21:1...ONEDNN_OP    
+TS=0`.:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+WARNING:tensorflow:Fro
+m C:\Users\Abc\AppData
+\Local\Programs\Python
+\Python311\Lib\site-pa
+ckages\keras\src\losse
+s.py:2976: The name tf
+.losses.sparse_softmax
+_cross_entropy is 
+deprecated. Please 
+use tf.compat.v1.losse
+s.sparse_softmax_cross
+_entropy instead.
+
+WARNING:tensorflow:Fro
+m C:\Users\Abc\AppData
+\Local\Programs\Python
+\Python311\Lib\site-pa
+ckages\keras\src\backe
+nd.py:1398: The name t
+f.executing_eagerly_ou
+tside_functions is 
+deprecated. Please 
+use tf.compat.v1.execu
+ting_eagerly_outside_f
+unctions instead.
+
+2026-03-21 
+21:18:30.855585: I ten
+sorflow/core/platform/
+cpu_feature_guard.cc:1
+82] This TensorFlow 
+binary is optimized 
+to use available CPU 
+instructions in 
+performance-critical 
+operations.
+To enable the 
+following 
+instructions: SSE 
+SSE2 SSE3 SSE4.1 
+SSE4.2 AVX2 FMA, in 
+other operations, 
+rebuild TensorFlow 
+with the appropriate 
+compiler flags.
+WARNING:tensorflow:Fro
+m C:\Users\Abc\AppData
+\Local\Programs\Python
+\Python311\Lib\site-pa
+ckages\keras\src\layer
+s\pooling\max_pooling2
+d.py:161: The name 
+tf.nn.max_pool is 
+deprecated. Please 
+use tf.nn.max_pool2d 
+instead.
+
+INFO:models.multi_mode
+l_deepfake_service:\U0
+001f504 Loading 
+multi-model 
+ensemble...
+INFO:models.multi_mode
+l_deepfake_service:\U0
+001f4e5 Loading 
+siglip: prithivMLmods/
+deepfake-detector-mode
+l-v1
+INFO:models.multi_mode
+l_deepfake_service:Loa
+ding SIGLIP model: pri
+thivMLmods/deepfake-de
+tector-model-v1
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/deepfake-detect
+or-model-v1/resolve/ma
+in/config.json 
+"HTTP/1.1 307 
+Temporary Redirect"
+Warning: You are 
+sending 
+unauthenticated 
+requests to the HF 
+Hub. Please set a 
+HF_TOKEN to enable 
+higher rate limits 
+and faster downloads.
+WARNING:huggingface_hu
+b.utils._http:Warning:
+ You are sending 
+unauthenticated 
+requests to the HF 
+Hub. Please set a 
+HF_TOKEN to enable 
+higher rate limits 
+and faster downloads.
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/api/res
+olve-cache/models/prit
+hivMLmods/deepfake-det
+ector-model-v1/c5cb24c
+6a159dd2b57ca15c6a1065
+bd0ce8fa380/config.jso
+n "HTTP/1.1 200 OK"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/deepfake-detect
+or-model-v1/resolve/ma
+in/model.safetensors 
+"HTTP/1.1 302 Found"
+
+Loading weights:   
+0%|          | 0/210 
+[00:00<?, ?it/s]
+Loading weights:  
+71%|#######1  | 
+150/210 [00:00<00:00, 
+1460.65it/s]
+Loading weights: 
+100%|##########| 
+210/210 [00:00<00:00, 
+1445.25it/s]
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/deepfake-detect
+or-model-v1/resolve/ma
+in/processor_config.js
+on "HTTP/1.1 404 Not 
+Found"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/deepfake-detect
+or-model-v1/resolve/ma
+in/preprocessor_config
+.json "HTTP/1.1 307 
+Temporary Redirect"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/api/res
+olve-cache/models/prit
+hivMLmods/deepfake-det
+ector-model-v1/c5cb24c
+6a159dd2b57ca15c6a1065
+bd0ce8fa380/preprocess
+or_config.json 
+"HTTP/1.1 200 OK"
+The image processor 
+of type `SiglipImagePr
+ocessor` is now 
+loaded as a fast 
+processor by default, 
+even if the model 
+checkpoint was saved 
+with a slow 
+processor. This is a 
+breaking change and 
+may produce slightly 
+different outputs. To 
+continue using the 
+slow processor, 
+instantiate this 
+class with 
+`use_fast=False`. 
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/deepfake-detect
+or-model-v1/resolve/ma
+in/processor_config.js
+on "HTTP/1.1 404 Not 
+Found"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/deepfake-detect
+or-model-v1/resolve/ma
+in/preprocessor_config
+.json "HTTP/1.1 307 
+Temporary Redirect"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/api/res
+olve-cache/models/prit
+hivMLmods/deepfake-det
+ector-model-v1/c5cb24c
+6a159dd2b57ca15c6a1065
+bd0ce8fa380/preprocess
+or_config.json 
+"HTTP/1.1 200 OK"
+INFO:models.multi_mode
+l_deepfake_service:\u2
+705 Successfully 
+loaded SIGLIP model 
+with processor
+INFO:models.multi_mode
+l_deepfake_service:\u2
+705 siglip loaded 
+successfully (weight: 
+1.0)
+INFO:models.multi_mode
+l_deepfake_service:\U0
+001f4e5 Loading 
+ai_detector: umm-maybe
+/AI-image-detector
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/umm-may
+be/AI-image-detector/r
+esolve/main/config.jso
+n "HTTP/1.1 302 Found"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/umm-may
+be/AI-image-detector/r
+esolve/main/model.safe
+tensors "HTTP/1.1 404 
+Not Found"
+INFO:httpx:HTTP 
+Request: GET https://h
+uggingface.co/api/mode
+ls/umm-maybe/AI-image-
+detector "HTTP/1.1 
+200 OK"
+INFO:httpx:HTTP 
+Request: GET https://h
+uggingface.co/api/mode
+ls/umm-maybe/AI-image-
+detector/commits/main 
+"HTTP/1.1 200 OK"
+
+Loading weights:   
+0%|          | 0/449 
+[00:00<?, 
+?it/s]INFO:httpx:HTTP 
+Request: GET https://h
+uggingface.co/api/mode
+ls/umm-maybe/AI-image-
+detector/discussions?p
+=0 "HTTP/1.1 200 OK"
+
+Loading weights:  
+67%|######6   | 
+300/449 [00:00<00:00, 
+2992.37it/s]
+Loading weights: 
+100%|##########| 
+449/449 [00:00<00:00, 
+3138.18it/s]
+INFO:httpx:HTTP 
+Request: GET https://h
+uggingface.co/api/mode
+ls/umm-maybe/AI-image-
+detector/commits/refs%
+2Fpr%2F4 "HTTP/1.1 
+200 OK"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/umm-may
+be/AI-image-detector/r
+esolve/main/processor_
+config.json "HTTP/1.1 
+404 Not Found"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/umm-may
+be/AI-image-detector/r
+esolve/refs%2Fpr%2F4/m
+odel.safetensors.index
+.json "HTTP/1.1 404 
+Not Found"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/umm-may
+be/AI-image-detector/r
+esolve/main/preprocess
+or_config.json 
+"HTTP/1.1 302 Found"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/umm-may
+be/AI-image-detector/r
+esolve/refs%2Fpr%2F4/m
+odel.safetensors 
+"HTTP/1.1 302 Found"
+The image processor 
+of type 
+`ViTImageProcessor` 
+is now loaded as a 
+fast processor by 
+default, even if the 
+model checkpoint was 
+saved with a slow 
+processor. This is a 
+breaking change and 
+may produce slightly 
+different outputs. To 
+continue using the 
+slow processor, 
+instantiate this 
+class with 
+`use_fast=False`. 
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/umm-may
+be/AI-image-detector/r
+esolve/main/processor_
+config.json "HTTP/1.1 
+404 Not Found"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/umm-may
+be/AI-image-detector/r
+esolve/main/preprocess
+or_config.json 
+"HTTP/1.1 302 Found"
+INFO:models.multi_mode
+l_deepfake_service:\u2
+705 ai_detector 
+loaded successfully 
+(weight: 1.0)
+INFO:models.multi_mode
+l_deepfake_service:\U0
+001f4e5 Loading 
+deepfake_v2: prithivML
+mods/Deep-Fake-Detecto
+r-v2-Model
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/Deep-Fake-Detec
+tor-v2-Model/resolve/m
+ain/config.json 
+"HTTP/1.1 307 
+Temporary Redirect"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/api/res
+olve-cache/models/prit
+hivMLmods/Deep-Fake-De
+tector-v2-Model/3a99ae
+26f52c7ac7c3a53103b6cf
+3a8b617f7093/config.js
+on "HTTP/1.1 200 OK"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/Deep-Fake-Detec
+tor-v2-Model/resolve/m
+ain/model.safetensors 
+"HTTP/1.1 302 Found"
+
+Loading weights:   
+0%|          | 0/200 
+[00:00<?, ?it/s]
+Loading weights:  
+74%|#######3  | 
+147/200 [00:00<00:00, 
+1389.20it/s]
+Loading weights: 
+100%|##########| 
+200/200 [00:00<00:00, 
+1422.00it/s]
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/Deep-Fake-Detec
+tor-v2-Model/resolve/m
+ain/processor_config.j
+son "HTTP/1.1 404 Not 
+Found"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/prithiv
+MLmods/Deep-Fake-Detec
+tor-v2-Model/resolve/m
+ain/preprocessor_confi
+g.json "HTTP/1.1 307 
+Temporary Redirect"
+INFO:httpx:HTTP 
+Request: HEAD https://
+huggingface.co/api/res
+olve-cache/models/prit
+hivMLmods/Deep-Fake-De
+tector-v2-Model/3a99ae
+26f52c7ac7c3a53103b6cf
+3a8b617f7093/preproces
+sor_config.json 
+"HTTP/1.1 200 OK"
+INFO:models.multi_mode
+l_deepfake_service:\u2
+705 deepfake_v2 
+loaded successfully 
+(weight: 1.0)
+INFO:models.multi_mode
+l_deepfake_service:\u2
+3ed\ufe0f  Skipping 
+video_classifier 
+(disabled)
+INFO:models.multi_mode
+l_deepfake_service:\u2
+3ed\ufe0f  Skipping 
+audio_classifier 
+(disabled)
+INFO:models.multi_mode
+l_deepfake_service:\u2
+705 Ensemble ready 
+with 3 models
+INFO:models.multi_mode
+l_deepfake_service:Mod
+els: ['siglip', 
+'ai_detector', 
+'deepfake_v2']
+INFO:models.multi_mode
+l_deepfake_service:  
+SigLIP mapping: 
+fake_idx=0(Fake), 
+real_idx=1(Real)
+INFO:models.multi_mode
+l_deepfake_service:  
+siglip: Fake=0.605, 
+Real=0.395
+INFO:models.multi_mode
+l_deepfake_service:  
+ViT mapping: fake_idx=
+0(artificial), 
+real_idx=1(human)
+INFO:models.multi_mode
+l_deepfake_service:  
+ai_detector: 
+Fake=0.661, Real=0.339
+INFO:models.multi_mode
+l_deepfake_service:  
+DeepfakeV2 mapping: 
+fake_idx=1(Deepfake), 
+real_idx=0(Realism)
+INFO:models.multi_mode
+l_deepfake_service:  
+deepfake_v2: 
+Fake=0.541, Real=0.459
+INFO:models.multi_mode
+l_deepfake_service:Ens
+emble result: 
+Fake=0.602, Real=0.398
+
+--- RUNNING ENSEMBLE ---
+
+--- FINAL RESULT ---
+{'fake': 0.602, 'real': 0.398, 'ensemble_average': True, 'models_used': 3, 'model_predictions': {'siglip': {'fake': 0.605, 'real': 0.395}, 'ai_detector': {'real': 0.339, 'fake': 0.661}, 'deepfake_v2': {'fake': 0.541, 'real': 0.459}}}

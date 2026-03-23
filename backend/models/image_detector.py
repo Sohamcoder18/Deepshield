@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import time
-from keras.models import load_model
 from mtcnn import MTCNN
 import logging
 from PIL import Image
@@ -107,22 +106,25 @@ class ImageDetector:
                     face_rgb = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
                     pil_image = Image.fromarray(face_rgb)
                     
-                    # Use ensemble service (returns fake vs real scores)
+                    # Use ensemble service - try ai_detector first (it's enabled)
                     import torch
-                    processor = self.ensemble_service.processors.get('siglip')
-                    model = self.ensemble_service.models.get('siglip')
+                    processor = self.ensemble_service.processors.get('ai_detector')
+                    model = self.ensemble_service.models.get('ai_detector')
                     
                     if processor and model:
                         with torch.no_grad():
                             inputs = processor(pil_image, return_tensors="pt").to(self.ensemble_service.device)
                             outputs = model(**inputs)
                             logits = outputs.logits
-                            probs = logits.softmax(dim=-1)[0]
+                            probs = torch.nn.functional.softmax(logits, dim=1)[0]
                             
-                            # Label mapping: 0=real, 1=fake
-                            fake_probability = float(probs[1].cpu().numpy())
-                            logger.debug(f"Ensemble detection: {fake_probability:.3f}")
-                            return np.clip(fake_probability, 0.0, 1.0)
+                            # CHECKPOINT IS INVERTED FROM CONFIG LABELS
+                            # Config says: Index 0="artificial", Index 1="human"
+                            # Actual checkpoint: Index 0 acts like human, Index 1 acts like artificial
+                            human_prob = float(probs[0].cpu().numpy())  # Index 0 acts like human
+                            artificial_prob = float(probs[1].cpu().numpy())  # Index 1 acts like artificial
+                            logger.info(f"🤖 AI-detector (INVERTED): human={human_prob:.3f}, artificial={artificial_prob:.3f}")
+                            return np.clip(artificial_prob, 0.0, 1.0)
                 except Exception as e:
                     logger.debug(f"Ensemble prediction error: {e}, using heuristic fallback")
             
@@ -252,17 +254,21 @@ class ImageDetector:
             # Calculate trust score (0 = fake, 100 = real)
             trust_score = (1 - fake_prob) * 100
             
-            # Determine verdict
-            # Use 0.40 threshold - siglip only (deepfake_v2 disabled)
-            # Siglip has lower calibration, requires >40% for deepfake
-            is_fake = fake_prob > 0.40
+            # Determine verdict using comparison logic (stable across model calibrations)
+            # Since we use the ensemble, fake_prob represents artificial probability
+            # For real images: fake_prob should be low (model says "human", not "artificial")
+            # For fake images: fake_prob should be high (model says "artificial")
+            # Using 0.5 threshold as neutral point between probabilities
+            is_fake = fake_prob > 0.5
             confidence = max(fake_prob, 1 - fake_prob)
             
             # Generate recommendation
             if is_fake:
-                recommendation = f"WARNING: This image shows signs of manipulation or AI generation. Detected confidence: {confidence*100:.1f}%"
+                recommendation = f"WARNING: This image shows signs of AI generation or manipulation. Detected probability: {fake_prob*100:.1f}%"
             else:
                 recommendation = f"This image appears authentic. Confidence: {confidence*100:.1f}%"
+            
+            logger.info(f"🎯 Image detection result: fake_prob={fake_prob:.3f}, is_fake={is_fake}, trust_score={trust_score:.1f}")
             
             return {
                 'trust_score': float(trust_score),

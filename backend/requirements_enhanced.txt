@@ -1,0 +1,50 @@
+# Core ML/DL frameworks
+torch>=2.0.0
+torchvision>=0.15.0
+tensorflow>=2.13.0
+keras>=2.14.0
+
+# Model libraries
+transformers>=4.35.0
+timm>=0.9.0
+
+# Image processing
+opencv-python>=4.8.0
+Pillow>=10.0.0
+scikit-image>=0.22.0
+
+# Audio processing
+librosa>=0.10.0
+torchaudio>=2.0.0
+numpy>=1.24.0
+
+# Deep learning utilities
+scikit-learn==1.7.2
+scipy>=1.11.0
+
+# API & Web
+Flask>=2.3.0
+flask-cors>=4.0.0
+flask-sqlalchemy>=3.1.0
+python-dotenv>=1.0.0
+
+# Database
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+firebase-admin>=6.2.0
+
+# Voice & AI
+pydub>=0.25.0
+groq>=0.7.0
+pyaudio>=0.2.13
+
+# Face detection
+mtcnn>=0.1.1
+
+# Utilities
+requests>=2.31.0
+PyJWT>=2.8.0
+brevo>=5.0.0
+
+# Performance
+httpx>=0.25.0

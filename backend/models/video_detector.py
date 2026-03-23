@@ -2,8 +2,6 @@ import os
 import numpy as np
 import cv2
 import time
-from keras.models import load_model
-from keras.applications.xception import Xception, preprocess_input
 from mtcnn import MTCNN
 import logging
 
@@ -19,7 +17,7 @@ class VideoDetector:
         """
         self.xception_model = None
         self.mtcnn_detector = None
-        self.preprocess_input = preprocess_input
+        self.preprocess_input = None  # Will be lazy-loaded if needed
         self.ensemble_service = None
         
         try:
@@ -121,7 +119,7 @@ class VideoDetector:
             face_region = frame_rgb[y:y+h, x:x+w]
             face_region = cv2.resize(face_region, (224, 224))
             
-            # Use ensemble service if available
+            # Use ensemble service with AI detector model
             if self.ensemble_service:
                 try:
                     from PIL import Image
@@ -130,42 +128,62 @@ class VideoDetector:
                     # Convert to PIL Image
                     pil_image = Image.fromarray(face_region)
                     
-                    processor = self.ensemble_service.processors.get('siglip')
-                    model = self.ensemble_service.models.get('siglip')
+                    # Try ai_detector model first (best for AI-generated content)
+                    processor = self.ensemble_service.processors.get('ai_detector')
+                    model = self.ensemble_service.models.get('ai_detector')
                     
                     if processor and model:
                         with torch.no_grad():
                             inputs = processor(pil_image, return_tensors="pt").to(self.ensemble_service.device)
                             outputs = model(**inputs)
-                            logits = outputs.logits
-                            probs = logits.softmax(dim=-1)[0]
                             
-                            # Label mapping: 0=real, 1=fake
-                            fake_probability = float(probs[1].cpu().numpy())
-                            logger.debug(f"Frame ensemble detection: {fake_probability:.3f}")
+                            # Handle different output formats
+                            if hasattr(outputs, 'logits'):
+                                logits = outputs.logits
+                                probs = logits.softmax(dim=-1)[0]
+                                # Label mapping: 0=real, 1=fake
+                                fake_probability = float(probs[1].cpu().numpy())
+                            else:
+                                # Fallback for different model output format
+                                fake_probability = float(outputs[0].cpu().numpy()) if hasattr(outputs, '__getitem__') else 0.5
+                            
+                            logger.debug(f"Video frame AI detection: {fake_probability:.3f}")
                             return np.clip(fake_probability, 0.0, 1.0)
                 except Exception as e:
-                    logger.debug(f"Ensemble prediction error on frame: {e}")
+                    logger.debug(f"AI detector prediction error on frame: {e}")
             
-            # Heuristic fallback: analyze frame properties
-            # Deepfakes often have color artifacts and motion inconsistencies
+            # Enhanced heuristic fallback: Analyze multiple artifacts that indicate AI generation
             face_bgr = cv2.cvtColor(face_region, cv2.COLOR_RGB2BGR)
             
-            # Calculate color variance
+            # 1. Calculate color variance (AI often has unnatural colors)
             b_var = np.var(face_bgr[:,:,0])
             g_var = np.var(face_bgr[:,:,1])
             r_var = np.var(face_bgr[:,:,2])
             color_variance = (b_var + g_var + r_var) / 3.0
             
-            # Calculate edge sharpness
+            # 2. Calculate edge sharpness (AI often has over-smooth edges)
             gray = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2GRAY)
             edges = cv2.Canny(gray, 50, 150)
             edge_ratio = np.sum(edges > 0) / edges.size
             
-            # Combine heuristics for video frames
-            fake_probability = 0.4 - (edge_ratio * 0.3) - (min(color_variance, 3000) / 10000 * 0.2)
-            fake_probability = np.clip(fake_probability, 0.15, 0.45)  # Bias towards authentic
+            # 3. Analyze frequency domain for compression artifacts (AI tends to have fewer)
+            fft_val = np.abs(np.fft.fft2(gray))
+            high_freq = np.sum(fft_val[fft_val.shape[0]//2:, fft_val.shape[1]//2:])
+            total_freq = np.sum(fft_val)
+            high_freq_ratio = high_freq / total_freq if total_freq > 0 else 0.5
             
+            # Combined scoring: Higher if artifact-free (typical of AI)
+            # AI-gen: low edge variance, low compression artifacts
+            # Real: natural compression, varied edges
+            edge_factor = edge_ratio * 0.3  # Real videos have more edges
+            compression_factor = high_freq_ratio * 0.3  # Real videos have more compression
+            color_factor = (min(color_variance, 3000) / 10000) * 0.4  # Real videos have varied colors
+            
+            # Score: higher = more likely fake
+            fake_probability = 1.0 - (edge_factor + compression_factor + color_factor)
+            fake_probability = np.clip(fake_probability, 0.25, 0.75)  # More balanced range
+            
+            logger.debug(f"Video frame heuristic: edge={edge_factor:.2f}, compression={compression_factor:.2f}, color={color_factor:.2f}")
             return float(fake_probability)
             
         except Exception as e:
@@ -219,15 +237,20 @@ class VideoDetector:
             if not frames:
                 raise ValueError("Could not extract frames from video")
             
-            # Analyze each frame
+            # Calculate statistics
             frame_scores = []
             for frame in frames:
                 score = self.analyze_frame(frame)
                 frame_scores.append(score)
             
+            # Log frame analysis results
+            logger.info(f"Video frame analysis: {len(frame_scores)} frames analyzed")
+            if frame_scores:
+                logger.info(f"Frame scores: min={min(frame_scores):.3f}, max={max(frame_scores):.3f}, avg={np.mean(frame_scores):.3f}, std={np.std(frame_scores):.3f}")
+            
             # Calculate statistics
             avg_fake_prob = np.mean(frame_scores)
-            suspicious_threshold = 0.5
+            suspicious_threshold = 0.55  # Increased sensitivity for AI detection
             suspicious_count = sum(1 for score in frame_scores if score > suspicious_threshold)
             suspicious_indices = [i for i, score in enumerate(frame_scores) if score > suspicious_threshold]
             
@@ -236,14 +259,16 @@ class VideoDetector:
             
             # Calculate trust score
             trust_score = (1 - avg_fake_prob) * 100
-            is_fake = avg_fake_prob > 0.40  # Threshold calibrated for siglip
+            is_fake = avg_fake_prob > 0.50  # Adjusted threshold - more sensitive for AI detection
             confidence = max(avg_fake_prob, 1 - avg_fake_prob)
             
             # Generate recommendation
             if is_fake:
-                recommendation = f"Video shows signs of temporal inconsistencies and manipulation. {suspicious_count} suspicious frames detected."
+                recommendation = f"⚠️ VIDEO FLAGGED AS AI-GENERATED: {suspicious_count}/{len(frame_scores)} frames show AI artifacts (avg score: {avg_fake_prob:.2%}). Detected inconsistency in color, edges, and compression patterns typical of AI generation."
+            elif avg_fake_prob > 0.45:
+                recommendation = f"⚠️ SUSPICIOUS VIDEO: {suspicious_count}/{len(frame_scores)} frames show potential manipulation (avg score: {avg_fake_prob:.2%}). Some frames show AI generation characteristics but not conclusive."
             else:
-                recommendation = f"Video appears authentic with good temporal consistency."
+                recommendation = f"✓ VIDEO APPEARS LEGITIMATE: Good temporal consistency with authentic edge patterns and compression artifacts (avg score: {avg_fake_prob:.2%})."
             
             return {
                 'duration': float(duration),

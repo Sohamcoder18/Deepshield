@@ -28,11 +28,11 @@
             </div>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="image-detection.html">Image Detection</a></li>
-                <li><a href="video-detection.html">Video Detection</a></li>
-                <li><a href="audio-detection.html">Audio Detection</a></li>
-                <li><a href="scanner.html">URL & QR Scanner</a></li>
-                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="image-detection.html">Images</a></li>
+                <li><a href="video-detection.html">Videos</a></li>
+                <li><a href="audio-detection.html">Audio</a></li>
+                <li><a href="scanner.html">Scanner</a></li>
+                <li><a href="ai-assistant.html">AI Chat</a></li>
                 <li><a href="feedback.html">Feedback</a></li>
                 <li><a href="index.html#about">About</a></li>
                 <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
@@ -42,20 +42,34 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">Detect Deepfakes with AI</h1>
-            <p class="hero-subtitle">Advanced AI-powered detection system to identify manipulated images, videos, and audio content</p>
-            <div class="hero-buttons">
-                <a href="image-detection.html" class="btn btn-primary">Analyze Image</a>
-                <a href="video-detection.html" class="btn btn-primary">Analyze Video</a>
-                <a href="audio-detection.html" class="btn btn-primary">Analyze Audio</a>
-                <a href="scanner.html" class="btn btn-secondary">Scan URL/QR</a>
-            </div>
-        </div>
         <div class="hero-background">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
+            <div class="glow-sphere glow-1"></div>
+            <div class="glow-sphere glow-2"></div>
+            <div class="glow-sphere glow-3"></div>
+            <div class="mesh-grid"></div>
+        </div>
+        <div class="hero-content glass animate-up">
+            <div class="hero-badge">AI-Powered Authentication</div>
+            <h1 class="hero-title">Protecting Truth in the <span class="text-gradient">Digital Era</span></h1>
+            <p class="hero-subtitle">Advanced AI detection system providing instant verification for images, videos, and audio content with enterprise-grade precision.</p>
+            <div class="hero-buttons">
+                <a href="image-detection.html" class="btn btn-primary btn-large">
+                    <span class="btn-icon">📸</span>
+                    Analyze Image
+                </a>
+                <a href="video-detection.html" class="btn btn-primary btn-large">
+                    <span class="btn-icon">🎥</span>
+                    Analyze Video
+                </a>
+                <a href="audio-detection.html" class="btn btn-primary btn-large">
+                    <span class="btn-icon">🎵</span>
+                    Analyze Audio
+                </a>
+                <a href="scanner.html" class="btn btn-secondary btn-large">
+                    <span class="btn-icon">🔍</span>
+                    Scan URL/QR
+                </a>
+            </div>
         </div>
     </section>
 
@@ -64,62 +78,37 @@
         <div class="container">
             <h2 class="section-title">Our Detection Technology</h2>
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card glass glass-hover">
                     <div class="feature-icon">📸</div>
                     <h3>Image Analysis</h3>
                     <p>Advanced facial artifact detection using XceptionNet CNN to identify manipulated images with high accuracy.</p>
-                    <ul class="feature-list">
-                        <li>XceptionNet model</li>
-                        <li>Facial region detection</li>
-                        <li>Real-time processing</li>
-                    </ul>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card glass glass-hover">
                     <div class="feature-icon">🎥</div>
                     <h3>Video Analysis</h3>
                     <p>Frame-by-frame deepfake detection with temporal consistency checking for comprehensive video authentication.</p>
-                    <ul class="feature-list">
-                        <li>Frame extraction</li>
-                        <li>Temporal analysis</li>
-                        <li>Consistency scoring</li>
-                    </ul>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card glass glass-hover">
                     <div class="feature-icon">🎵</div>
                     <h3>Audio Analysis</h3>
                     <p>Speech synthesis detection using MFCC feature extraction and CNN classification for audio authenticity verification.</p>
-                    <ul class="feature-list">
-                        <li>MFCC extraction</li>
-                        <li>Speech analysis</li>
-                        <li>Synthetic detection</li>
-                    </ul>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card glass glass-hover">
                     <div class="feature-icon">🔀</div>
                     <h3>Fusion Logic</h3>
                     <p>Intelligent weighted fusion of multiple detection results for a comprehensive trust score assessment.</p>
-                    <ul class="feature-list">
-                        <li>Multi-modal analysis</li>
-                        <li>Weighted scoring</li>
-                        <li>Final verdict</li>
-                    </ul>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card glass glass-hover">
                     <div class="feature-icon">🧠</div>
                     <h3>Explainable AI</h3>
                     <p>Grad-CAM visualization highlights the regions that influenced the model's decision for transparency.</p>
-                    <ul class="feature-list">
-                        <li>Visual explanations</li>
-                        <li>Attention maps</li>
-                        <li>Decision insights</li>
-                    </ul>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card glass glass-hover">
                     <div class="feature-icon">⚡</div>
                     <h3>Real-time Results</h3>
                     <p>Instant analysis and detailed reports with confidence scores and visual indicators for quick decision making.</p>
@@ -152,22 +141,22 @@
         <div class="container">
             <h2 class="section-title">ML Models & Techniques</h2>
             <div class="models-grid">
-                <div class="model-card">
+                <div class="model-card glass glass-hover">
                     <h3>XceptionNet</h3>
                     <p class="model-type">CNN Architecture</p>
                     <p>Deep learning CNN based on depthwise separable convolutions for capturing subtle facial artifacts.</p>
                 </div>
-                <div class="model-card">
+                <div class="model-card glass glass-hover">
                     <h3>MTCNN</h3>
                     <p class="model-type">Face Detection</p>
                     <p>Multi-task cascaded CNN for detecting and cropping facial regions with landmark precision.</p>
                 </div>
-                <div class="model-card">
+                <div class="model-card glass glass-hover">
                     <h3>MFCC</h3>
                     <p class="model-type">Audio Features</p>
                     <p>Mel-Frequency Cepstral Coefficients for extracting meaningful features from audio signals.</p>
                 </div>
-                <div class="model-card">
+                <div class="model-card glass glass-hover">
                     <h3>Audio CNN</h3>
                     <p class="model-type">Classification</p>
                     <p>Convolutional Neural Network trained to classify audio as real or synthetically generated.</p>
@@ -212,7 +201,7 @@
     <section class="about" id="about">
         <div class="container">
             <h2 class="section-title">About DeepShield</h2>
-            <div class="about-content">
+            <div class="about-content glass">
                 <p>DeepShield is a state-of-the-art deepfake detection system designed to help identify manipulated multimedia content. With advances in AI and deep learning, creating convincing deepfakes has become easier, making detection tools essential for content verification and misinformation prevention.</p>
                 <p>Our system combines multiple detection algorithms and machine learning models to provide comprehensive analysis across images, videos, and audio content. We leverage cutting-edge techniques like XceptionNet, MTCNN, and MFCC feature extraction to ensure accurate and reliable results.</p>
                 <p>DeepShield is committed to transparency and explainability, providing visual insights into why content was flagged as potentially fake, helping users understand the detection process.</p>

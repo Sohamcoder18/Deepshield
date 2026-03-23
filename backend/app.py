@@ -23,8 +23,8 @@ import base64
 logger = logging.getLogger(__name__)
 
 # Import detection modules
-from models.image_detector import ImageDetector
-from models.video_detector import VideoDetector
+from models.enhanced_image_detector import EnhancedImageDetector
+from models.enhanced_video_detector import EnhancedVideoDetector
 from models.audio_detector import AudioDetector
 from models.wav2vec2_audio_detector import Wav2Vec2AudioDetector
 from models.fusion_logic import FusionLogic
@@ -266,11 +266,15 @@ def send_analysis_notification(email, analysis_type, results):
 # Initialize detectors
 try:
     logger.info("Initializing detection models...")
-    image_detector = ImageDetector()
-    video_detector = VideoDetector()
+    logger.info("🚀 Loading Vision Transformer + Inception-ResNet-v2 models...")
+    image_detector = EnhancedImageDetector()
+    
+    logger.info("🚀 Loading Temporal Deepfake Detector (CNN + Transformer)...")
+    video_detector = EnhancedVideoDetector()
+    
     audio_detector = AudioDetector()
     fusion_logic = FusionLogic()
-    logger.info("All models initialized successfully!")
+    logger.info("✅ All enhanced models initialized successfully!")
 except Exception as e:
     logger.error(f"Error initializing models: {str(e)}")
 
@@ -408,30 +412,32 @@ def analyze_image():
         if deepfake_available and deepfake_service:
             try:
                 ensemble_result = deepfake_service.classify_image_ensemble(filepath)
-                fake_prob = ensemble_result.get('fake', 0.5)
-                
-                # --- HACKATHON DEMO OVERRIDE ---
-                # Force specific test files to be flagged as deepfakes for hackathon demonstration
-                if filename.lower() in ['images.jpg', 'images.jpeg', 'fake.jpg', 'fake.png']:
-                    logger.info("🎬 HACKATHON DEMO MODE: Forcing deepfake detection for test file")
-                    fake_prob = 0.947  # High confidence fake
-                # -------------------------------
-                
-                # Use 0.40 threshold with siglip only (deepfake_v2 disabled due to poor calibration)
-                # Siglip gives lower scores, so 0.40 is properly calibrated
-                is_fake = fake_prob > 0.40
-                trust_score = (1 - fake_prob) * 100
-                confidence = max(fake_prob, 1 - fake_prob)
-                
+
+                # Use the structured verdict from the new 3-category decision logic
+                verdict       = ensemble_result.get('verdict', 'Authentic')
+                trust_score   = ensemble_result.get('trust_score', 50.0)
+                is_fake       = ensemble_result.get('is_fake', False)
+                ai_prob       = ensemble_result.get('ai_prob', 0.0)
+                deepfake_score= ensemble_result.get('deepfake_score', 0.0)
+                real_score    = ensemble_result.get('real_score', 1.0)
+                fake_prob     = ensemble_result.get('fake', 0.5)
+                real_prob     = ensemble_result.get('real', 0.5)
+                confidence    = max(fake_prob, real_prob)
+
+                logger.info(f"📊 Ensemble verdict={verdict}, trust={trust_score}%, ai={ai_prob}, deepfake={deepfake_score}, real={real_score}")
+
                 # Generate Grad-CAM for explainability (using single model detector)
+                # WARNING: Running image_detector.detect() here causes an Out of Memory (OOM) 
+                # hard crash (ntdll.dll) because both MultiModelService and EnhancedImageDetector 
+                # are loaded into RAM simultaneously. Disabling to prevent the crash.
                 gradcam_heatmap = None
-                try:
-                    gradcam_results = image_detector.detect(filepath)
-                    gradcam_heatmap = gradcam_results.get('gradcam')
-                    logger.info("✓ Grad-CAM generated successfully")
-                except Exception as e:
-                    logger.warning(f"Could not generate Grad-CAM: {str(e)}")
-                
+                # try:
+                #     gradcam_results = image_detector.detect(filepath)
+                #     gradcam_heatmap = gradcam_results.get('gradcam')
+                #     logger.info("✓ Grad-CAM generated successfully")
+                # except Exception as e:
+                #     logger.warning(f"Could not generate Grad-CAM: {str(e)}")
+
                 # Generate AI-based reasoning
                 ai_analysis = None
                 if reasoning_engine:
@@ -440,17 +446,24 @@ def analyze_image():
                             'trust_score': trust_score,
                             'confidence': confidence,
                             'artifact_score': float(fake_prob * 100),
-                            'xception_confidence': float((1 - fake_prob) * 100),
+                            'xception_confidence': float(real_prob * 100),
                             'is_fake': is_fake
                         }
                         ai_analysis = reasoning_engine.generate_image_analysis(metrics)
                         logger.info("✓ AI-based analysis generated")
                     except Exception as e:
                         logger.warning(f"Could not generate AI analysis: {str(e)}")
-                
+
                 file_info = get_file_info(filepath)
-                
-                # Build response with AI analysis
+
+                # Default recommendation derived from verdict
+                default_rec = (
+                    "This image appears to be AI-generated." if verdict == "AI Generated"
+                    else "This image appears to be a deepfake." if verdict == "Deepfake"
+                    else "This image appears authentic."
+                )
+
+                # Build response
                 response = {
                     'status': 'success',
                     'analysis_type': 'image',
@@ -459,16 +472,20 @@ def analyze_image():
                     'analysis_time': 0.5,
                     'trust_score': float(trust_score),
                     'is_fake': bool(is_fake),
+                    'verdict': verdict,               # "AI Generated" / "Deepfake" / "Authentic"
+                    'ai_prob': float(ai_prob),
+                    'deepfake_score': float(deepfake_score),
+                    'real_score': float(real_score),
                     'confidence': float(confidence),
-                    'xception_score': float((1 - fake_prob) * 100),
+                    'xception_score': float(real_prob * 100),
                     'artifact_detection': float(fake_prob * 100),
                     'gradcam_heatmap': gradcam_heatmap,
-                    'recommendation': ai_analysis['verdict'] if ai_analysis else f"This image {'appears manipulated/AI-generated' if is_fake else 'appears authentic'}",
-                    'detection_method': 'multi-model-ensemble',
-                    'models_used': ensemble_result.get('models_used', 2),
+                    'recommendation': ai_analysis['verdict'] if ai_analysis else default_rec,
+                    'detection_method': 'multi-model-ensemble-3class',
+                    'models_used': ensemble_result.get('models_used', 3),
                     'timestamp': datetime.now().isoformat()
                 }
-                
+
                 # Add AI analysis details if available
                 if ai_analysis:
                     response['ai_analysis'] = {
@@ -478,25 +495,29 @@ def analyze_image():
                         'confidence_level': ai_analysis.get('confidence_level', ''),
                         'risk_assessment': ai_analysis.get('risk_assessment', '')
                     }
-                
+
                 # Create results dict for database saving
                 results = {
                     'trust_score': trust_score,
                     'is_fake': is_fake,
                     'confidence': confidence,
                     'analysis_time': 0.5,
-                    'xception_confidence': float((1 - fake_prob) * 100),
+                    'xception_confidence': float(real_prob * 100),
                     'artifact_score': float(fake_prob * 100),
                     'recommendation': response['recommendation']
                 }
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 logger.warning(f"Ensemble detection failed: {str(e)}, falling back to single model")
                 results = image_detector.detect(filepath)
                 file_info = get_file_info(filepath)
                 
-                # Use 0.40 threshold with siglip model
+                # Use the is_fake result from image_detector (which uses ensemble internally)
+                is_fake = results['is_fake']
                 fake_prob = 1 - (results['trust_score'] / 100)
-                is_fake = fake_prob > 0.40
+                
+                logger.info(f"⚠️  Fallback detection: is_fake={is_fake}, trust_score={results['trust_score']:.1f}")
                 
                 # Generate AI-based reasoning for fallback
                 ai_analysis = None
@@ -543,11 +564,12 @@ def analyze_image():
             # Fallback to single model
             results = image_detector.detect(filepath)
             
-            # Use 0.40 threshold with siglip model only
-            fake_prob = 1 - (results['trust_score'] / 100)
-            is_fake = fake_prob > 0.40
+            # Use the is_fake result from image_detector directly
+            is_fake = results['is_fake']
             
             file_info = get_file_info(filepath)
+            
+            logger.info(f"⚠️  Direct detection (no ensemble): is_fake={is_fake}, trust_score={results['trust_score']:.1f}")
             
             # Generate AI-based reasoning
             ai_analysis = None
@@ -668,7 +690,39 @@ def analyze_video():
 
         # Perform detection
         logger.info(f"Analyzing video: {filename} (extracting {frame_count} frames)")
-        results = video_detector.detect(filepath, frame_count)
+        
+        import time
+        start_time = time.time()
+        
+        if deepfake_service:
+            logger.info("Using advanced multi-model ensemble detection for video...")
+            try:
+                ensemble_result = deepfake_service.classify_video_ensemble(filepath, num_frames=frame_count)
+                
+                # Map ensemble_result back to expected frontend keys
+                results = {
+                    'analysis_time': round(time.time() - start_time, 2),
+                    'duration': 0, # Requires external lib for accurate duration
+                    'frames_analyzed': ensemble_result['frames_analyzed'],
+                    'trust_score': ensemble_result['trust_score'],
+                    'is_fake': ensemble_result['is_fake'],
+                    'confidence': ensemble_result['deepfake_score'], # Mapped to confidence UI
+                    'avg_fake_probability': ensemble_result['fake'], # Mapped to bar chart
+                    # Approximate suspicious frames based on overall fake percentage
+                    'suspicious_frames': int(ensemble_result['fake'] * ensemble_result['frames_analyzed']),
+                    'suspicious_frame_indices': [],
+                    'temporal_consistency': 'Consistent' if ensemble_result['trust_score'] > 50 else 'Inconsistent (Deepfake)',
+                    'consistency_score': ensemble_result['trust_score'],
+                    'frame_results': [],
+                    'recommendation': ensemble_result['verdict']
+                }
+            except Exception as e:
+                logger.warning(f"Ensemble video detection failed: {str(e)}. Falling back to single model.")
+                import traceback
+                traceback.print_exc()
+                results = video_detector.detect(filepath, frame_count)
+        else:
+            results = video_detector.detect(filepath, frame_count)
 
         # Get file info
         file_info = get_file_info(filepath)
@@ -680,18 +734,18 @@ def analyze_video():
             'file_name': filename,
             'file_size': file_info['size'],
             'analysis_time': results['analysis_time'],
-            'duration': results['duration'],
-            'frames_analyzed': results['frames_analyzed'],
+            'duration': results.get('duration', 0),
+            'frames_analyzed': results.get('frames_analyzed', frame_count),
             'trust_score': results['trust_score'],
             'is_fake': results['is_fake'],
             'confidence': results['confidence'],
-            'average_fake_probability': results['avg_fake_probability'],
-            'suspicious_frames': results['suspicious_frames'],
-            'suspicious_frame_indices': results['suspicious_frame_indices'],
-            'temporal_consistency': results['temporal_consistency'],
-            'consistency_score': results['consistency_score'],
-            'frame_results': results['frame_results'],
-            'recommendation': results['recommendation'],
+            'average_fake_probability': results.get('avg_fake_probability', 0),
+            'suspicious_frames': results.get('suspicious_frames', 0),
+            'suspicious_frame_indices': results.get('suspicious_frame_indices', []),
+            'temporal_consistency': results.get('temporal_consistency', 'Unknown'),
+            'consistency_score': results.get('consistency_score', 0),
+            'frame_results': results.get('frame_results', []),
+            'recommendation': results.get('recommendation', 'Unknown'),
             'timestamp': datetime.now().isoformat()
         }
 
@@ -772,7 +826,31 @@ def analyze_audio():
 
         # Perform detection
         logger.info(f"Analyzing audio: {filename}")
-        results = audio_detector.detect(filepath)
+        
+        # Prioritize multi-model ensemble if available
+        if 'deepfake_service' in globals() and deepfake_service:
+            try:
+                logger.info("Using ensemble service for audio analysis")
+                results_ensemble = deepfake_service.classify_audio_ensemble(filepath)
+                
+                # Get legacy features from audio_detector for visualization
+                results_legacy = audio_detector.detect(filepath)
+                
+                # Merge results, prioritizing ensemble for verdict
+                results = dict(results_legacy)
+                results.update({
+                    'trust_score': float(results_ensemble['trust_score']),
+                    'is_fake': bool(results_ensemble['is_fake']),
+                    'verdict': str(results_ensemble['verdict']),
+                    'ensemble_average': True,
+                    'synthesis_probability': float(results_ensemble['fake'] * 100),
+                    'authenticity_score': float(results_ensemble['real'] * 100)
+                })
+            except Exception as e:
+                logger.warning(f"Ensemble audio analysis failed, falling back: {e}")
+                results = audio_detector.detect(filepath)
+        else:
+            results = audio_detector.detect(filepath)
 
         # Get file info
         file_info = get_file_info(filepath)

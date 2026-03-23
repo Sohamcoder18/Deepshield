@@ -123,6 +123,11 @@ def validate_audio(file):
             b'\xFF\xFB',       # MP3 (alternative)
             b'fLaC',           # FLAC
             b'\xFF\xFA',       # MPEG-2 Audio
+            b'\x00\x00\x00',   # M4A / MP4 Audio
+            b'OggS',           # OGG
+            b'ADIF',           # AAC
+            b'\xFF\xF1',       # AAC ADTS
+            b'\xFF\xF9',       # AAC ADTS
         ]
         
         is_valid_audio = any(magic_bytes.startswith(sig) for sig in valid_signatures)

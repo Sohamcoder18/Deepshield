@@ -28,10 +28,10 @@
             </div>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
-                <li><a href="image-detection.html">Image Detection</a></li>
-                <li><a href="video-detection.html" class="active">Video Detection</a></li>
-                <li><a href="audio-detection.html">Audio Detection</a></li>
-                <li><a href="ai-assistant.html">AI Assistant</a></li>
+                <li><a href="image-detection.html">Images</a></li>
+                <li><a href="video-detection.html" class="active">Videos</a></li>
+                <li><a href="audio-detection.html">Audio</a></li>
+                <li><a href="ai-assistant.html">AI Chat</a></li>
                 <li><a href="feedback.html">Feedback</a></li>
                 <li><a href="index.html#about">About</a></li>
                 <li><a href="profile.html" id="profileLink" class="profile-name" style="display: none;"></a></li>
@@ -40,24 +40,39 @@
     </nav>
 
     <!-- Detection Container -->
-    <div class="detection-container">
-        <div class="detection-header">
-            <h1>Video Deepfake Detection</h1>
-            <p>Upload a video to analyze it frame-by-frame for signs of manipulation and deepfake artifacts</p>
+    <div class="detection-container animate-in">
+        <div class="detection-header glass">
+            <div class="header-content">
+                <div class="hero-badge">Temporal Analysis</div>
+                <h1>Video <span class="text-gradient">Deepfake Detection</span></h1>
+                <p>Advanced frame-by-frame analysis with temporal consistency checking and facial artifact detection for high-precision video authentication.</p>
+            </div>
+            <div class="header-background">
+                <div class="glow-sphere glow-2"></div>
+            </div>
         </div>
 
-        <div class="detection-content">
+        <div class="detection-content glass">
             <!-- Upload Section -->
             <div class="upload-section">
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">🎥</div>
-                    <h3>Drop your video here</h3>
-                    <p>or click to browse</p>
+                <div class="upload-area-premium" id="uploadArea">
+                    <div class="upload-glow"></div>
+                    <div class="upload-icon-wrapper">
+                        <span class="upload-icon">🎥</span>
+                    </div>
+                    <div class="upload-text">
+                        <h3>Secure Video Portal</h3>
+                        <p>Drag and drop video here or <span class="browse-link">browse files</span></p>
+                        <span class="file-support">Supported: MP4, AVI, MOV (Max 50MB)</span>
+                    </div>
                     <input type="file" id="fileInput" accept="video/*" hidden>
                 </div>
-                <div class="file-info" id="fileInfo" style="display: none;">
-                    <p id="fileName"></p>
-                    <button class="btn btn-secondary" onclick="clearFile()">Change File</button>
+                <div class="file-info-premium" id="fileInfo" style="display: none;">
+                    <div class="file-details">
+                        <span class="file-icon">🎬</span>
+                        <p id="fileName"></p>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearFile()">Change File</button>
                 </div>
             </div>
 

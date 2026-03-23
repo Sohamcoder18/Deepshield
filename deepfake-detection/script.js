@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavbar();
     setupNavigation();
     setupUploadArea();
+    initializeExpandableCards();
 });
 
 function logout() {
@@ -513,6 +514,9 @@ function displayImageResults(results) {
     // Hide loading
     hideLoading();
     
+    // Initialize expandable cards
+    initializeExpandableCards();
+    
     // Scroll to results
     resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
@@ -590,6 +594,9 @@ function displayVideoResults(results) {
     // Hide loading
     hideLoading();
     
+    // Initialize expandable cards
+    initializeExpandableCards();
+    
     // Scroll to results
     resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
@@ -665,6 +672,9 @@ function displayAudioResults(results) {
 
     // Hide loading
     hideLoading();
+    
+    // Initialize expandable cards
+    initializeExpandableCards();
     
     // Scroll to results
     resultsSection.scrollIntoView({ behavior: 'smooth' });
@@ -970,6 +980,9 @@ function displayAIReasons(aiAnalysis, isFake) {
     reasonsContainer.classList.add('ai-analysis-section');
     reasonsContainer.style.display = 'block';
     
+    // Make AI analysis section expandable like result cards
+    makeElementExpandable(reasonsContainer);
+    
     console.log('✓ AI Reasons displayed successfully');
 }
 
@@ -983,6 +996,63 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// ============================================
+// EXPANDABLE CARDS FUNCTIONALITY
+// ============================================
+
+function initializeExpandableCards() {
+    // Make result cards expandable with click handlers
+    const resultCards = document.querySelectorAll('.result-card');
+    
+    resultCards.forEach(card => {
+        makeElementExpandable(card);
+    });
+    
+    console.log('✓ Expandable cards initialized');
+}
+
+function makeElementExpandable(element) {
+    if (!element) return;
+    
+    const h3 = element.querySelector('h3');
+    if (!h3) return;
+    
+    // Mark element as expandable if not already
+    if (element.classList.contains('expandable')) {
+        return; // Already expandable
+    }
+    
+    element.classList.add('expandable');
+    
+    // Check if content wrapper already exists
+    let content = element.querySelector('.card-content');
+    
+    if (!content) {
+        // Wrap element content in a div for smooth collapsing
+        content = document.createElement('div');
+        content.className = 'card-content';
+        
+        // Move all children after h3 into the content div
+        while (element.children.length > 1) {
+            content.appendChild(element.children[1]);
+        }
+        
+        element.appendChild(content);
+    }
+    
+    // Add click handler to toggle expand/collapse
+    h3.style.cursor = 'pointer';
+    
+    h3.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Toggle collapsed state
+        const isCollapsed = element.classList.contains('collapsed');
+        element.classList.toggle('collapsed', !isCollapsed);
+    });
 }
 
 function generateTimelineChart(totalFrames, suspiciousFrames) {
@@ -1185,10 +1255,22 @@ function analyzeAnother() {
 // ============================================
 
 function initializeNavbar() {
+    const navbar = document.querySelector('.navbar');
     const token = localStorage.getItem('authToken');
     const userEmail = localStorage.getItem('userEmail');
     const profileLink = document.getElementById('profileLink');
     const navLinks = document.querySelector('.nav-links');
+    
+    if (!navbar) return;
+
+    // Handle scroll effect
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
     
     if (!profileLink || !navLinks) return;
     
@@ -1199,11 +1281,11 @@ function initializeNavbar() {
     if (token && userEmail) {
         // Show profile link with user email
         profileLink.style.display = 'block';
-        profileLink.textContent = userEmail;
+        profileLink.innerHTML = `<span class="nav-icon">👤</span> Profile`;
         
         // Create logout button
         const logoutLi = document.createElement('li');
-        logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">Logout</a>`;
+        logoutLi.innerHTML = `<a href="#" id="logoutBtn" class="logout-link">🚪 Logout</a>`;
         navLinks.appendChild(logoutLi);
         
         // Logout functionality
